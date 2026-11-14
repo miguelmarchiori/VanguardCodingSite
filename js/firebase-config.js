@@ -12,8 +12,10 @@
    Passo a passo completo no README.md.
    ========================================================= */
 window.VANCODE_FIREBASE = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  appId: ''
+  apiKey: 'AIzaSyAruCsnG0xvIGigPGfEWlhLBCSzIkMYUwk',
+  authDomain: 'vancode.firebaseapp.com',
+  projectId: 'vancode',
+  storageBucket: 'vancode.firebasestorage.app',
+  messagingSenderId: '984451534458',
+  appId: '1:984451534458:web:0e6ec888f25db08e0b35c3'
 };
