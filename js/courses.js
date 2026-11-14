@@ -1,5 +1,5 @@
 /* =========================================================
-   Vanguard Code · conteúdo das trilhas
+   VanCode · conteúdo das trilhas
    ---------------------------------------------------------
    Tipos de passo:
      teach  → explica um conceito  { title, text, code?, tip? }
@@ -7,21 +7,20 @@
      fill   → completar lacuna     { q, code (com ___), options, a (texto), why? }
      order  → ordenar linhas       { q, lines (ordem certa), alts? (outras ordens válidas), why? }
      type   → digitar código       { q, a: [respostas aceitas], ph?, why? }
-   Para criar uma lição nova, é só copiar um bloco e editar! 😉
+   Para criar uma lição nova, é só copiar um bloco e editar.
    ========================================================= */
 'use strict';
 
 const _ = (...linhas) => linhas.join('\n');
 
 const COURSES = {
-  /* ======================================================
-     🐍  PYTHON · LEGO SPIKE Prime
+  /* ======================================================  PYTHON · LEGO SPIKE Prime
      ====================================================== */
   python: {
     id: 'python',
     lang: 'python',
     name: 'Python',
-    emoji: '🐍',
+    emoji: '',
     robot: 'LEGO® SPIKE™ Prime',
     color: '#3776D6',
     desc: 'A linguagem que roda no LEGO SPIKE Prime e também em sites, jogos e inteligência artificial!',
@@ -32,9 +31,9 @@ const COURSES = {
         color: '#3776D6',
         lessons: [
           {
-            title: 'Seu primeiro código', icon: '💬',
+            title: 'Seu primeiro código',
             steps: [
-              { t: 'teach', title: 'Diga olá! 👋',
+              { t: 'teach', title: 'Diga olá!',
                 text: 'Em Python, o comando <code>print()</code> mostra uma mensagem na tela. O texto vai <b>entre aspas</b> dentro dos parênteses.',
                 code: 'print("Olá, robô!")',
                 tip: 'No SPIKE, o que você manda pelo <code>print</code> aparece no console do app. Ótimo pra descobrir o que o robô está “pensando”!' },
@@ -47,7 +46,7 @@ const COURSES = {
               { t: 'fill', q: 'Complete para mostrar a mensagem:', code: '___("Vamos programar!")',
                 options: ['print', 'escrever', 'falar', 'show'], a: 'print' },
               { t: 'order', q: 'Monte a contagem regressiva para o robô largar:',
-                lines: ['print("3...")', 'print("2...")', 'print("1...")', 'print("Já! 🚀")'],
+                lines: ['print("3...")', 'print("2...")', 'print("1...")', 'print("Já!")'],
                 why: 'O Python lê o código de cima para baixo, uma linha por vez.' },
               { t: 'choice', q: 'Este código dá erro. O que está faltando?', code: 'print("Olá)',
                 options: ['Fechar as aspas', 'Um ponto final', 'Mais parênteses', 'Nada, está certo'], a: 0,
@@ -57,9 +56,9 @@ const COURSES = {
             ]
           },
           {
-            title: 'Variáveis', icon: '📦',
+            title: 'Variáveis',
             steps: [
-              { t: 'teach', title: 'Caixinhas de memória 📦',
+              { t: 'teach', title: 'Caixinhas de memória',
                 text: 'Uma <b>variável</b> é uma caixinha com nome onde o robô guarda um valor. Use <code>=</code> para colocar algo dentro dela.',
                 code: _('velocidade = 50', 'nome = "Bip"', 'print(velocidade)'),
                 tip: 'Repare: <code>print(velocidade)</code> mostra <b>50</b>, e não a palavra “velocidade”, porque está sem aspas!' },
@@ -80,9 +79,9 @@ const COURSES = {
             ]
           },
           {
-            title: 'Fazendo contas', icon: '🧮',
+            title: 'Fazendo contas',
             steps: [
-              { t: 'teach', title: 'Python é uma calculadora 🧮',
+              { t: 'teach', title: 'Python é uma calculadora',
                 text: 'Use <code>+</code> para somar, <code>-</code> para subtrair, <code>*</code> para multiplicar e <code>/</code> para dividir.',
                 code: _('print(2 + 3)    # 5', 'print(10 - 4)   # 6', 'print(3 * 4)    # 12', 'print(10 / 2)   # 5.0'),
                 tip: 'Tudo que vem depois do <code>#</code> é um <b>comentário</b>: o Python ignora. Serve pra deixar recadinhos para o seu time!' },
@@ -109,9 +108,9 @@ const COURSES = {
         color: '#14B8A6',
         lessons: [
           {
-            title: 'Decisões com if', icon: '🤔',
+            title: 'Decisões com if',
             steps: [
-              { t: 'teach', title: 'Se... senão! 🤔',
+              { t: 'teach', title: 'Se... senão!',
                 text: 'O <code>if</code> faz o robô tomar decisões. Repare nos <b>dois pontos</b> <code>:</code> e nos <b>4 espaços</b> antes das linhas de dentro. Isso se chama <b>indentação</b>.',
                 code: _('distancia = 8', 'if distancia < 10:', '    print("Obstáculo! Parar!")', 'else:', '    print("Caminho livre!")'),
                 tip: 'Comparações: <code>&lt;</code> menor, <code>&gt;</code> maior, <code>==</code> igual, <code>!=</code> diferente, <code>&lt;=</code> menor ou igual, <code>&gt;=</code> maior ou igual.' },
@@ -124,16 +123,16 @@ const COURSES = {
               { t: 'choice', q: 'O que está faltando neste código?', code: _('if pontos > 5', '    print("Uhul!")'),
                 options: ['Os dois pontos : no final do if', 'Aspas no 5', 'Um ponto e vírgula', 'Parênteses no print'], a: 0 },
               { t: 'order', q: 'Monte: se o botão foi apertado, o robô comemora; senão, espera.',
-                lines: ['if botao_apertado:', '    print("Comemorar! 🎉")', 'else:', '    print("Esperando...")'] },
+                lines: ['if botao_apertado:', '    print("Comemorar!")', 'else:', '    print("Esperando...")'] },
               { t: 'choice', q: 'Por que as linhas de dentro do if têm espaços no começo?',
                 options: ['Para o Python saber o que está DENTRO do if', 'Só para ficar bonito', 'Para o robô andar mais rápido', 'Não precisa ter'], a: 0,
                 why: 'Em Python, a indentação é obrigatória: ela mostra quais linhas pertencem ao if.' }
             ]
           },
           {
-            title: 'Repetindo com for', icon: '🔁',
+            title: 'Repetindo com for',
             steps: [
-              { t: 'teach', title: 'Repita sem copiar! 🔁',
+              { t: 'teach', title: 'Repita sem copiar!',
                 text: 'Nos blocos você arrasta o “repetir”. Em Python usamos o <code>for</code>: ele repete as linhas de dentro quantas vezes você quiser.',
                 code: _('for i in range(3):', '    print("Bip!")'),
                 tip: '<code>range(3)</code> gera os números 0, 1 e 2. Ou seja: 3 repetições!' },
@@ -145,15 +144,15 @@ const COURSES = {
               { t: 'fill', q: 'Complete para repetir 10 vezes:', code: _('for i in ___(10):', '    print("Volta!")'),
                 options: ['range', 'repeat', 'times', 'loop'], a: 'range' },
               { t: 'order', q: 'Faça a luz piscar 3 vezes (acende e depois apaga):',
-                lines: ['for i in range(3):', '    print("Luz acesa 💡")', '    print("Luz apagada")'] },
+                lines: ['for i in range(3):', '    print("Luz acesa")', '    print("Luz apagada")'] },
               { t: 'choice', q: 'Qual a grande vantagem do <code>for</code>?',
                 options: ['Repetir sem copiar e colar o mesmo código', 'Deixar o programa mais lento', 'Só funciona com números', 'Nenhuma'], a: 0 }
             ]
           },
           {
-            title: 'Loop while', icon: '♾️',
+            title: 'Loop while',
             steps: [
-              { t: 'teach', title: 'Enquanto for verdade... ♾️',
+              { t: 'teach', title: 'Enquanto for verdade...',
                 text: 'O <code>while</code> repete <b>enquanto</b> uma condição for verdadeira. Perfeito para “ande até encontrar a parede”!',
                 code: _('energia = 3', 'while energia > 0:', '    print("Andando...")', '    energia = energia - 1', 'print("Parei!")'),
                 tip: 'No robô é comum usar <code>while True:</code> para repetir para sempre, lendo os sensores o tempo todo.' },
@@ -172,18 +171,18 @@ const COURSES = {
             ]
           },
           {
-            title: 'Funções', icon: '🧩',
+            title: 'Funções',
             steps: [
-              { t: 'teach', title: 'Crie seus próprios comandos 🧩',
+              { t: 'teach', title: 'Crie seus próprios comandos',
                 text: 'Com <code>def</code> você dá um nome a um grupo de comandos. Depois é só chamar pelo nome!',
-                code: _('def comemorar():', '    print("Uhul!")', '    print("Vanguard! 🏆")', '', 'comemorar()', 'comemorar()'),
+                code: _('def comemorar():', '    print("Uhul!")', '    print("Vanguard!")', '', 'comemorar()', 'comemorar()'),
                 tip: 'Funções evitam repetir código e deixam o programa organizado. Parecido com “Meus Blocos”, só que muito mais poderoso.' },
               { t: 'fill', q: 'Complete para criar a função:', code: _('___ dancar():', '    print("Girando!")'),
                 options: ['def', 'function', 'func', 'criar'], a: 'def' },
               { t: 'choice', q: 'Quantas vezes aparece “Uhul!”?',
                 code: _('def comemorar():', '    print("Uhul!")', '', 'comemorar()', 'comemorar()'),
                 options: ['2', '1', '0', '3'], a: 0, why: 'A função foi chamada duas vezes!' },
-              { t: 'teach', title: 'Funções com presentes 🎁',
+              { t: 'teach', title: 'Funções com presentes',
                 text: 'Funções podem receber valores (os <b>parâmetros</b>) e devolver um resultado com <code>return</code>.',
                 code: _('def dobro(numero):', '    return numero * 2', '', 'print(dobro(4))   # 8') },
               { t: 'choice', q: 'O que aparece na tela?', code: _('def soma(a, b):', '    return a + b', '', 'print(soma(3, 7))'),
@@ -200,9 +199,9 @@ const COURSES = {
         color: '#F59E0B',
         lessons: [
           {
-            title: 'Conhecendo o Hub', icon: '🧱',
+            title: 'Conhecendo o Hub',
             steps: [
-              { t: 'teach', title: 'Hora do robô! 🤖',
+              { t: 'teach', title: 'Hora do robô!',
                 text: 'No app do SPIKE, crie um projeto em <b>Python</b>. Quase todo programa tem esta carinha:',
                 code: _('from hub import light_matrix', 'import runloop', '', 'async def main():', '    await light_matrix.write("Oi!")', '', 'runloop.run(main())'),
                 tip: '<code>import</code> = pegar ferramentas da caixa. <code>main</code> = o programa principal. <code>runloop.run(main())</code> = dar o play!' },
@@ -222,9 +221,9 @@ const COURSES = {
             ]
           },
           {
-            title: 'Motores em ação', icon: '⚙️',
+            title: 'Motores em ação',
             steps: [
-              { t: 'teach', title: 'Girando motores ⚙️',
+              { t: 'teach', title: 'Girando motores',
                 text: 'O módulo <code>motor</code> controla um motor. Diga a <b>porta</b>, quantos <b>graus</b> girar e a <b>velocidade</b> (em graus por segundo).',
                 code: _('import motor', 'from hub import port', 'import runloop', '', 'async def main():', '    # porta A, 360 graus = 1 volta, velocidade 720', '    await motor.run_for_degrees(port.A, 360, 720)', '', 'runloop.run(main())') },
               { t: 'choice', q: 'Quantas voltas o motor dá com <b>720 graus</b>?',
@@ -233,7 +232,7 @@ const COURSES = {
               { t: 'fill', q: 'O motor está na porta <b>B</b>. Complete:', code: 'await motor.run_for_degrees(port.___, 180, 500)',
                 options: ['B', 'A', '2', 'b'], a: 'B',
                 why: 'As portas do Hub são letras maiúsculas: A, B, C, D, E e F.' },
-              { t: 'teach', title: 'Andando com duas rodas 🚗',
+              { t: 'teach', title: 'Andando com duas rodas',
                 text: 'Para um robô com rodas, junte dois motores em um <b>par</b>. O último número é a <b>direção</b> (steering): <code>0</code> anda reto, outros valores fazem curva.',
                 code: _('import motor_pair', 'from hub import port', 'import runloop', '', 'async def main():', '    motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)', '    await motor_pair.move_for_degrees(motor_pair.PAIR_1, 720, 0)', '', 'runloop.run(main())') },
               { t: 'choice', q: 'Em <code>move_for_degrees(motor_pair.PAIR_1, 720, 0)</code>, o que significa o <b>0</b>?',
@@ -243,9 +242,9 @@ const COURSES = {
             ]
           },
           {
-            title: 'Sensores', icon: '👀',
+            title: 'Sensores',
             steps: [
-              { t: 'teach', title: 'O robô enxerga! 👀',
+              { t: 'teach', title: 'O robô enxerga!',
                 text: 'O sensor de distância mede em <b>milímetros</b>. Com um <code>while True</code> o robô fica de olho o tempo todo e para antes de bater!',
                 code: _('async def main():', '    motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)', '    motor_pair.move(motor_pair.PAIR_1, 0)   # anda reto', '    while True:', '        distancia = distance_sensor.distance(port.C)', '        if 0 < distancia < 100:   # mais perto que 10 cm', '            motor_pair.stop(motor_pair.PAIR_1)', '            break   # sai do while', '        await runloop.sleep_ms(10)'),
                 tip: 'Quando o sensor não enxerga nada, ele devolve <b>-1</b>. Por isso conferimos <code>0 &lt; distancia</code>!' },
@@ -256,7 +255,7 @@ const COURSES = {
                 options: ['<', '>', '==', '='], a: '<' },
               { t: 'choice', q: 'O que o <code>break</code> faz?',
                 options: ['Sai do loop', 'Quebra o robô', 'Reinicia o programa', 'Pula uma linha'], a: 0 },
-              { t: 'teach', title: 'Sensor de cor 🎨',
+              { t: 'teach', title: 'Sensor de cor',
                 text: 'O sensor de cor diz qual cor está vendo. Compare com as cores do módulo <code>color</code>:',
                 code: _('import color_sensor', 'import color', 'from hub import port', '', 'if color_sensor.color(port.E) == color.RED:', '    print("Vermelho! Parar!")'),
                 tip: 'Também existem <code>color.BLUE</code>, <code>color.GREEN</code>, <code>color.YELLOW</code>, <code>color.BLACK</code>, <code>color.WHITE</code>...' },
@@ -264,9 +263,9 @@ const COURSES = {
                 code: _('if color_sensor.color(port.E) == color.___:', '    print("Achei o verde!")'),
                 options: ['GREEN', 'green', 'VERDE', 'Green'], a: 'GREEN',
                 why: 'As cores são constantes em inglês e MAIÚSCULAS.' },
-              { t: 'order', q: '🏆 Desafio final! Ande até ver a linha preta e pare:',
+              { t: 'order', q: 'Desafio final! Ande até ver a linha preta e pare:',
                 lines: ['motor_pair.move(motor_pair.PAIR_1, 0)', 'while color_sensor.color(port.E) != color.BLACK:', '    await runloop.sleep_ms(10)', 'motor_pair.stop(motor_pair.PAIR_1)'],
-                why: 'Liga os motores, espera enquanto NÃO vê preto e, quando vê, para. Você acabou de programar um robô de verdade! 🎉' }
+                why: 'Liga os motores, espera enquanto NÃO vê preto e, quando vê, para. Você acabou de programar um robô de verdade!' }
             ]
           }
         ]
@@ -274,14 +273,13 @@ const COURSES = {
     ]
   },
 
-  /* ======================================================
-     ☕  JAVA · FIRST Tech Challenge
+  /* ======================================================  JAVA · FIRST Tech Challenge
      ====================================================== */
   java: {
     id: 'java',
     lang: 'java',
     name: 'Java',
-    emoji: '☕',
+    emoji: '',
     robot: 'FIRST® Tech Challenge',
     color: '#F2792B',
     desc: 'A linguagem dos robôs do FTC, também usada em apps Android, jogos e grandes sistemas.',
@@ -292,9 +290,9 @@ const COURSES = {
         color: '#F2792B',
         lessons: [
           {
-            title: 'Seu primeiro código', icon: '💬',
+            title: 'Seu primeiro código',
             steps: [
-              { t: 'teach', title: 'Olá, Java! ☕',
+              { t: 'teach', title: 'Olá, Java!',
                 text: 'Java é a linguagem usada pelas equipes do <b>FTC</b>. Para mostrar uma mensagem usamos <code>System.out.println()</code>. E atenção: <b>todo comando termina com ponto e vírgula</b> <code>;</code>',
                 code: 'System.out.println("Olá, FTC!");',
                 tip: 'No robô do FTC, as mensagens aparecem na tela do Driver Station com o <code>telemetry</code>. Você vai aprender logo, logo!' },
@@ -314,9 +312,9 @@ const COURSES = {
             ]
           },
           {
-            title: 'Tipos de variáveis', icon: '📦',
+            title: 'Tipos de variáveis',
             steps: [
-              { t: 'teach', title: 'Cada caixa tem um tipo 📦',
+              { t: 'teach', title: 'Cada caixa tem um tipo',
                 text: 'Em Java você diz o <b>tipo</b> da variável antes do nome:',
                 code: _('int voltas = 3;              // número inteiro', 'double potencia = 0.5;       // número com vírgula', 'boolean garraAberta = true;  // verdadeiro ou falso', 'String equipe = "Vanguard";  // texto'),
                 tip: 'Em programação usamos <b>ponto</b> no lugar da vírgula: <code>0.5</code> (e não 0,5).' },
@@ -336,9 +334,9 @@ const COURSES = {
             ]
           },
           {
-            title: 'Contas e lógica', icon: '🧮',
+            title: 'Contas e lógica',
             steps: [
-              { t: 'teach', title: 'Matemática e lógica 🧮',
+              { t: 'teach', title: 'Matemática e lógica',
                 text: 'Os operadores <code>+ - * /</code> funcionam como na calculadora. Para juntar condições usamos <code>&amp;&amp;</code> (E), <code>||</code> (OU) e <code>!</code> (NÃO).',
                 code: _('double metade = 1.0 / 2;          // 0.5', 'boolean podeAndar = true && false; // false', 'boolean temLuz = !false;          // true') },
               { t: 'choice', q: 'Qual é o resultado?', code: 'System.out.println(4 * 5 + 2);',
@@ -363,9 +361,9 @@ const COURSES = {
         color: '#E5487A',
         lessons: [
           {
-            title: 'Decisões com if', icon: '🤔',
+            title: 'Decisões com if',
             steps: [
-              { t: 'teach', title: 'Se... senão 🤔',
+              { t: 'teach', title: 'Se... senão',
                 text: 'Em Java, a condição vai entre <b>parênteses</b> <code>( )</code> e os comandos de dentro ficam entre <b>chaves</b> <code>{ }</code>.',
                 code: _('double distancia = 8.0;', 'if (distancia < 10) {', '    System.out.println("Obstáculo! Parar!");', '} else {', '    System.out.println("Caminho livre!");', '}'),
                 tip: 'Use <code>==</code> para comparar números e booleans. Para comparar textos (String), use <code>.equals()</code>.' },
@@ -384,9 +382,9 @@ const COURSES = {
             ]
           },
           {
-            title: 'Repetindo com for', icon: '🔁',
+            title: 'Repetindo com for',
             steps: [
-              { t: 'teach', title: 'O for tem 3 partes 🔁',
+              { t: 'teach', title: 'O for tem 3 partes',
                 text: '<b>Início</b> (<code>int i = 0</code>), <b>condição</b> (<code>i &lt; 3</code>) e <b>passo</b> (<code>i++</code>, que soma 1 no i).',
                 code: _('for (int i = 0; i < 3; i++) {', '    System.out.println("Bip!");', '}'),
                 tip: '<code>i++</code> é o mesmo que <code>i = i + 1</code>.' },
@@ -397,15 +395,15 @@ const COURSES = {
               { t: 'fill', q: 'Complete o passo do for:', code: _('for (int i = 0; i < 5; ___) {', '    System.out.println("Volta " + i);', '}'),
                 options: ['i++', 'i+', '++', 'i = 1'], a: 'i++' },
               { t: 'order', q: 'Pisque a luz 3 vezes (acende e depois apaga):',
-                lines: ['for (int i = 0; i < 3; i++) {', '    System.out.println("Acende 💡");', '    System.out.println("Apaga");', '}'] },
+                lines: ['for (int i = 0; i < 3; i++) {', '    System.out.println("Acende");', '    System.out.println("Apaga");', '}'] },
               { t: 'choice', q: 'O que o <code>i++</code> faz?',
                 options: ['Soma 1 ao i', 'Multiplica o i por 2', 'Zera o i', 'Mostra o i'], a: 0 }
             ]
           },
           {
-            title: 'Loop while', icon: '♾️',
+            title: 'Loop while',
             steps: [
-              { t: 'teach', title: 'Enquanto... ♾️',
+              { t: 'teach', title: 'Enquanto...',
                 text: 'O <code>while</code> repete enquanto a condição for verdadeira. No FTC, o <code>while (opModeIsActive())</code> é o coração do TeleOp: ele repete enquanto a partida está rolando!',
                 code: _('int energia = 3;', 'while (energia > 0) {', '    System.out.println("Andando...");', '    energia--;', '}', 'System.out.println("Parei!");'),
                 tip: '<code>energia--</code> é o mesmo que <code>energia = energia - 1</code>.' },
@@ -424,9 +422,9 @@ const COURSES = {
             ]
           },
           {
-            title: 'Métodos', icon: '🧩',
+            title: 'Métodos',
             steps: [
-              { t: 'teach', title: 'Crie seus próprios comandos 🧩',
+              { t: 'teach', title: 'Crie seus próprios comandos',
                 text: 'Métodos são comandos que você mesmo cria. <code>void</code> quer dizer que ele não devolve nada; <code>int</code> antes do nome quer dizer que ele devolve um número inteiro com <code>return</code>.',
                 code: _('void comemorar() {', '    System.out.println("Uhul!");', '}', '', 'int dobro(int numero) {', '    return numero * 2;', '}'),
                 tip: 'No FTC vários métodos já vêm prontos: <code>waitForStart()</code>, <code>sleep(1000)</code>, <code>opModeIsActive()</code>...' },
@@ -450,9 +448,9 @@ const COURSES = {
         color: '#6C4DF6',
         lessons: [
           {
-            title: 'Seu primeiro OpMode', icon: '🎮',
+            title: 'Seu primeiro OpMode',
             steps: [
-              { t: 'teach', title: 'O esqueleto do OpMode 🦴',
+              { t: 'teach', title: 'O esqueleto do OpMode',
                 text: 'Todo programa do FTC é um <b>OpMode</b>. Ele aparece na lista do Driver Station com o nome que você colocar no <code>@TeleOp</code>.',
                 code: _('package org.firstinspires.ftc.teamcode;', '', 'import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;', 'import com.qualcomm.robotcore.eventloop.opmode.TeleOp;', '', '@TeleOp(name = "Meu Primeiro TeleOp")', 'public class MeuPrimeiro extends LinearOpMode {', '    @Override', '    public void runOpMode() {', '        telemetry.addData("Status", "Pronto!");', '        telemetry.update();', '', '        waitForStart();', '', '        while (opModeIsActive()) {', '            // aqui o robô é controlado', '        }', '    }', '}'),
                 tip: 'O nome do arquivo precisa ser igual ao nome da classe: <code>MeuPrimeiro.java</code>.' },
@@ -469,9 +467,9 @@ const COURSES = {
             ]
           },
           {
-            title: 'Motores e servos', icon: '⚙️',
+            title: 'Motores e servos',
             steps: [
-              { t: 'teach', title: 'Ligando motores ⚙️',
+              { t: 'teach', title: 'Ligando motores',
                 text: 'Pegamos o motor do <code>hardwareMap</code> pelo <b>nome da configuração</b> e damos uma potência de <b>-1.0</b> (ré total) até <b>1.0</b> (frente total).',
                 code: _('DcMotor motorEsquerdo = hardwareMap.get(DcMotor.class, "motorEsquerdo");', '', 'motorEsquerdo.setPower(0.5);  // metade da força para frente', 'sleep(1000);                   // espera 1 segundo', 'motorEsquerdo.setPower(0);    // para'),
                 tip: 'O nome entre aspas precisa ser IGUAL ao da configuração do robô no Driver Station!' },
@@ -479,7 +477,7 @@ const COURSES = {
                 options: ['Gira com força total para trás', 'Para o motor', 'Gira devagar para frente', 'Dá erro'], a: 0 },
               { t: 'choice', q: 'Qual potência deixa o motor <b>parado</b>?', co: true,
                 options: ['0', '1', '-1', '0.5'], a: 0 },
-              { t: 'teach', title: 'Servos vão para posições 🦾',
+              { t: 'teach', title: 'Servos vão para posições',
                 text: 'Um servo vai para uma <b>posição</b> entre <b>0.0</b> e <b>1.0</b>. Perfeito para garras e braços!',
                 code: _('Servo garra = hardwareMap.get(Servo.class, "garra");', '', 'garra.setPosition(0.0);  // garra fechada', 'garra.setPosition(1.0);  // garra aberta') },
               { t: 'fill', q: 'Coloque o servo no meio do caminho:', code: 'garra.___(0.5);',
@@ -492,9 +490,9 @@ const COURSES = {
             ]
           },
           {
-            title: 'Gamepad e telemetria', icon: '🕹️',
+            title: 'Gamepad e telemetria',
             steps: [
-              { t: 'teach', title: 'Controlando com o gamepad 🕹️',
+              { t: 'teach', title: 'Controlando com o gamepad',
                 text: 'O <code>gamepad1</code> é o controle do piloto. Os analógicos vão de <b>-1</b> a <b>1</b> e os botões são <code>true</code> ou <code>false</code>.',
                 code: _('while (opModeIsActive()) {', '    double frente = -gamepad1.left_stick_y; // pra cima é negativo!', '    motorEsquerdo.setPower(frente);', '    motorDireito.setPower(frente);', '', '    if (gamepad1.a) {', '        garra.setPosition(1.0);', '    }', '', '    telemetry.addData("Potência", frente);', '    telemetry.update();', '}'),
                 tip: 'Pegadinha clássica: empurrar o analógico para FRENTE dá um valor NEGATIVO. Por isso usamos o sinal de menos!' },
@@ -507,9 +505,9 @@ const COURSES = {
                 options: ['update', 'show', 'print', 'refresh'], a: 'update' },
               { t: 'choice', q: 'Tração tanque: cada analógico controla um lado do robô. Qual linha está certa?', co: true,
                 options: ['motorDireito.setPower(-gamepad1.right_stick_y);', 'motorDireito.setPower(gamepad1.a);', 'motorDireito = gamepad1;', 'gamepad1.setPower(motorDireito);'], a: 0 },
-              { t: 'order', q: '🏆 Desafio final! Monte o começo do TeleOp:',
+              { t: 'order', q: 'Desafio final! Monte o começo do TeleOp:',
                 lines: ['waitForStart();', 'while (opModeIsActive()) {', '    double frente = -gamepad1.left_stick_y;', '    motor.setPower(frente);', '}'],
-                why: 'Espera o PLAY, e enquanto a partida rola, lê o analógico e manda para o motor. Isso é um TeleOp de verdade! 🎉' }
+                why: 'Espera o PLAY, e enquanto a partida rola, lê o analógico e manda para o motor. Isso é um TeleOp de verdade!' }
             ]
           }
         ]

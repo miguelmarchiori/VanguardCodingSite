@@ -1,22 +1,22 @@
 /* =========================================================
-   Vanguard Code · Arena do Bip
+   VanCode · Arena
    Um mini-interpretador de Python e Java (só com os comandos
-   do Bip) + o tabuleiro animado.
+   do Guardinho) + o tabuleiro animado.
    ========================================================= */
 'use strict';
 
 /* ---------- Fases ----------
-   #  pedra   B  bateria   G  bandeira   R  início   X  início + bandeira
+   #  pedra   B  moeda   G  bandeira   R  início   X  início + bandeira
    dir: 0 cima · 1 direita · 2 baixo · 3 esquerda                        */
 const ARENA_LEVELS = [
   {
     name: 'Em frente!', dir: 1,
     map: ['......', '......', 'R...G.', '......', '......', '......'],
-    goal: 'Leve o Bip até a bandeira 🏁.',
+    goal: 'Leve o Guardinho até a bandeira.',
     limit: { python: 1, java: 1 },
     hint: {
       python: 'Cada <code>frente()</code> anda 1 casa. Sabia que <code>frente(4)</code> anda 4 de uma vez?',
-      java: 'Cada <code>robo.frente();</code> anda 1 casa. Sabia que <code>robo.frente(4);</code> anda 4 de uma vez?'
+      java: 'Cada <code>guardinho.frente();</code> anda 1 casa. Sabia que <code>guardinho.frente(4);</code> anda 4 de uma vez?'
     }
   },
   {
@@ -26,13 +26,13 @@ const ARENA_LEVELS = [
     limit: { python: 3, java: 3 },
     hint: {
       python: 'Ande 3 casas para cima, use <code>direita()</code> para virar e ande mais 3.',
-      java: 'Ande 3 casas para cima, use <code>robo.direita();</code> para virar e ande mais 3.'
+      java: 'Ande 3 casas para cima, use <code>guardinho.direita();</code> para virar e ande mais 3.'
     }
   },
   {
-    name: 'Caça às baterias', dir: 0,
+    name: 'Caça às moedas', dir: 0,
     map: ['B....B', '.####.', '.####.', '.####.', '.####.', 'R.##.G'],
-    goal: 'Pegue as 2 baterias ⚡ e termine na bandeira.',
+    goal: 'Pegue as 2 moedas e termine na bandeira.',
     limit: { python: 5, java: 5 },
     hint: {
       python: 'Dê a volta pelas bordas: suba, vire à direita, atravesse, vire à direita e desça.',
@@ -42,7 +42,7 @@ const ARENA_LEVELS = [
   {
     name: 'Escadinha', dir: 1,
     map: ['#####G', '####B.', '###..#', '##B.##', '#..###', 'R.####'],
-    goal: 'Suba a escada! Para ganhar ⭐⭐ você vai precisar de um loop.',
+    goal: 'Suba a escada! Para ganhar 2 estrelas você vai precisar de um loop.',
     limit: { python: 5, java: 6 },
     hint: {
       python: 'Cada degrau é: <code>frente()</code>, <code>esquerda()</code>, <code>frente()</code>, <code>direita()</code>. Repita 5 vezes com <code>for i in range(5):</code>',
@@ -52,17 +52,17 @@ const ARENA_LEVELS = [
   {
     name: 'Volta no lago', dir: 0,
     map: ['......', '.B..B.', '..##..', '..##..', '.X..B.', '......'],
-    goal: 'Pegue as 3 baterias e volte para a bandeira, onde você começou.',
+    goal: 'Pegue as 3 moedas e volte para a bandeira, onde você começou.',
     limit: { python: 3, java: 4 },
     hint: {
       python: 'O caminho é um quadrado! 4 vezes: <code>frente(3)</code> e <code>direita()</code>.',
-      java: 'O caminho é um quadrado! 4 vezes: <code>robo.frente(3);</code> e <code>robo.direita();</code>'
+      java: 'O caminho é um quadrado! 4 vezes: <code>guardinho.frente(3);</code> e <code>guardinho.direita();</code>'
     }
   },
   {
     name: 'Cortador de grama', dir: 1,
     map: ['R....B', 'B.B...', '...B.B', 'B.....', 'G.....', '######'],
-    goal: 'Varra o campo em zigue-zague, pegue as 6 baterias e termine na bandeira.',
+    goal: 'Varra o campo em zigue-zague, pegue as 6 moedas e termine na bandeira.',
     limit: { python: 9, java: 10 },
     hint: {
       python: 'Uma ida e volta é: <code>frente(5)</code>, <code>direita()</code>, <code>frente()</code>, <code>direita()</code>, <code>frente(5)</code>, <code>esquerda()</code>, <code>frente()</code>, <code>esquerda()</code>. Repita 2 vezes!',
@@ -118,7 +118,7 @@ const BipLang = {
 
       if (pending) {
         const top = stack[stack.length - 1];
-        if (indent <= top.indent) throw this.err(ln, 'As linhas de dentro do <code>for</code> precisam de espaços no começo (indentação). Aperte TAB ⇥ antes do comando!');
+        if (indent <= top.indent) throw this.err(ln, 'As linhas de dentro do <code>for</code> precisam de espaços no começo (indentação). Aperte TAB antes do comando!');
         stack.push({ indent, body: pending.body });
         pending = null;
       } else {
@@ -146,7 +146,7 @@ const BipLang = {
     if (/[{}]/.test(code)) throw this.err(ln, 'Em Python não usamos chaves <code>{ }</code>. Os espaços no começo da linha mostram o que está dentro do <code>for</code>.');
 
     if (/^for\b/.test(code)) {
-      if (/^for\s*\(/.test(code)) throw this.err(ln, 'Isso parece Java! 😄 Em Python o for é assim: <code>for i in range(4):</code>');
+      if (/^for\s*\(/.test(code)) throw this.err(ln, 'Isso parece Java! Em Python o for é assim: <code>for i in range(4):</code>');
       if (!code.endsWith(':')) throw this.err(ln, 'Faltaram os dois pontos <code>:</code> no final do <code>for</code>.');
       m = code.match(/^for\s+([A-Za-z_]\w*)\s+in\s+range\s*\(\s*(\d+)\s*\)\s*:$/);
       if (!m) throw this.err(ln, 'Escreva o for assim: <code>for i in range(4):</code>');
@@ -155,7 +155,7 @@ const BipLang = {
       return { type: 'loop', times, body: [], line: ln };
     }
 
-    code = code.replace(/;\s*$/, '').replace(/^robo\s*\.\s*/, '');
+    code = code.replace(/;\s*$/, '').replace(/^guardinho\s*\.\s*/, '');
 
     if ((m = code.match(/^frente\s*\(\s*(\d*)\s*\)$/))) {
       const n = m[1] === '' ? 1 : +m[1];
@@ -170,7 +170,7 @@ const BipLang = {
     if (/^(frente|direita|esquerda)\s*\(/.test(code) && !/\)$/.test(code)) throw this.err(ln, 'Faltou fechar o parêntese <code>)</code>.');
     if (/^frente\s*\(/.test(code)) throw this.err(ln, 'Dentro do <code>frente()</code> vai um número, tipo <code>frente(3)</code>.');
     if (/^(frente|direita|esquerda|print)/i.test(code)) throw this.err(ln, 'Python diferencia maiúsculas e minúsculas: escreva os comandos em letras minúsculas.');
-    if (/^(while|if|def)\b/.test(code)) throw this.err(ln, 'Nesta arena use o <code>for</code> para repetir. 😉');
+    if (/^(while|if|def)\b/.test(code)) throw this.err(ln, 'Nesta arena use o <code>for</code> para repetir.');
     throw this.err(ln, `Não conheço <code>${esc(code.slice(0, 30))}</code>. Comandos: <code>frente()</code>, <code>direita()</code>, <code>esquerda()</code>, <code>print()</code> e <code>for</code>.`);
   },
 
@@ -258,24 +258,25 @@ const BipLang = {
       if (t.v === '{') return { type: 'loop', times: 1, body: block(), line: t.line };
       if (t.v === ';') { next(); return { type: 'noop' }; }
       if (t.t === 'id' && t.v === 'for') return forStatement();
-      if (t.t === 'id' && t.v === 'robo') return roboStatement();
+      if (t.t === 'id' && t.v === 'guardinho') return heroStatement();
       if (t.t === 'id' && t.v === 'System') return printStatement();
-      if (t.t === 'id' && CMDS.includes(t.v)) throw self.err(t.line, `Em Java os comandos começam com <code>robo.</code> Escreva: <code>robo.${t.v}();</code>`);
-      if (t.t === 'id' && /^robo$/i.test(t.v)) throw self.err(t.line, 'Java diferencia maiúsculas: escreva <code>robo</code> com letras minúsculas.');
-      if (t.t === 'id' && /^(while|if|void|public)$/.test(t.v)) throw self.err(t.line, 'Nesta arena use o <code>for</code> para repetir. 😉');
+      if (t.t === 'id' && CMDS.includes(t.v)) throw self.err(t.line, `Em Java os comandos começam com <code>guardinho.</code> Escreva: <code>guardinho.${t.v}();</code>`);
+      if (t.t === 'id' && /^guardinho$/i.test(t.v)) throw self.err(t.line, 'Java diferencia maiúsculas: escreva <code>guardinho</code> com letras minúsculas.');
+      if (t.t === 'id' && t.v === 'robo') throw self.err(t.line, 'Aqui quem anda é o cavaleiro: escreva <code>guardinho.frente();</code>');
+      if (t.t === 'id' && /^(while|if|void|public)$/.test(t.v)) throw self.err(t.line, 'Nesta arena use o <code>for</code> para repetir.');
       if (t.t === 'id' && t.v === 'print') throw self.err(t.line, 'Em Java o print é assim: <code>System.out.println("Oi!");</code>');
-      throw self.err(t.line, `Não conheço <code>${esc(t.v)}</code>. Use <code>robo.frente();</code>, <code>robo.direita();</code>, <code>robo.esquerda();</code> ou <code>for</code>.`);
+      throw self.err(t.line, `Não conheço <code>${esc(t.v)}</code>. Use <code>guardinho.frente();</code>, <code>guardinho.direita();</code>, <code>guardinho.esquerda();</code> ou <code>for</code>.`);
     }
-    function roboStatement() {
+    function heroStatement() {
       const t = next();
-      expect('.', 'Depois de <code>robo</code> vem um ponto: <code>robo.frente();</code>');
+      expect('.', 'Depois de <code>guardinho</code> vem um ponto: <code>guardinho.frente();</code>');
       const name = next();
-      if (!name || name.t !== 'id') throw self.err(t.line, 'Depois de <code>robo.</code> vem o nome do comando: frente, direita ou esquerda.');
+      if (!name || name.t !== 'id') throw self.err(t.line, 'Depois de <code>guardinho.</code> vem o nome do comando: frente, direita ou esquerda.');
       if (!CMDS.includes(name.v)) {
-        if (CMDS.includes(name.v.toLowerCase())) throw self.err(name.line, `Java diferencia maiúsculas: escreva <code>robo.${name.v.toLowerCase()}();</code>`);
-        throw self.err(name.line, `O Bip não conhece <code>${esc(name.v)}</code>. Use frente, direita ou esquerda.`);
+        if (CMDS.includes(name.v.toLowerCase())) throw self.err(name.line, `Java diferencia maiúsculas: escreva <code>guardinho.${name.v.toLowerCase()}();</code>`);
+        throw self.err(name.line, `O Guardinho não conhece <code>${esc(name.v)}</code>. Use frente, direita ou esquerda.`);
       }
-      expect('(', `Faltaram os parênteses: <code>robo.${name.v}();</code>`);
+      expect('(', `Faltaram os parênteses: <code>guardinho.${name.v}();</code>`);
       let n = 1;
       if (peek() && peek().t === 'num') {
         if (name.v !== 'frente') throw self.err(name.line, `<code>${name.v}()</code> não recebe número: cada ${name.v}() vira 90°.`);
@@ -375,22 +376,27 @@ const Arena = {
   timer: null,
   built: false,
   speed: 300,
+  _fresh: true,
 
   codeKey() { return this.lang + '-' + this.level; },
   starterCode() {
     return this.lang === 'java'
-      ? '// Leve o Bip até a bandeira 🏁\nrobo.frente();\n'
-      : '# Leve o Bip até a bandeira 🏁\nfrente()\n';
+      ? '// Leve o Guardinho até a bandeira\nguardinho.frente();\n'
+      : '# Leve o Guardinho até a bandeira\nfrente()\n';
   },
   stars(lang, i) { return (S.arena && S.arena[lang + '-' + i]) || 0; },
   unlocked(i) { return S.mentor || i === 0 || this.stars(this.lang, i - 1) > 0; },
+  starsHTML(n) { return `<span class="lvl-stars">${icon('star', n >= 1 ? 'on' : '')}${icon('star', n >= 2 ? 'on' : '')}</span>`; },
 
   show() {
     this.lang = Store.get('vg_arena_lang', 'python');
     if (!this.built) this.build();
-    const first = ARENA_LEVELS.findIndex((_, i) => !this.stars(this.lang, i));
+    if (this._fresh) {
+      const first = ARENA_LEVELS.findIndex((_, i) => !this.stars(this.lang, i));
+      this.level = first < 0 ? 0 : first;
+      this._fresh = false;
+    }
     if (!this.unlocked(this.level)) this.level = 0;
-    if (this._fresh !== false) { this.level = first < 0 ? 0 : first; this._fresh = false; }
     this.loadLevel(this.level);
   },
 
@@ -400,20 +406,21 @@ const Arena = {
     <div class="arena-page wrap">
       <div class="arena-head">
         <div>
-          <h1>🎮 Arena do Bip</h1>
-          <p>Escreva código <b>de verdade</b> para guiar o Bip até a bandeira 🏁, pegando todas as baterias ⚡.</p>
+          <span class="eyebrow">Arena</span>
+          <h1>Missões do Guardinho</h1>
+          <p>Escreva código <b>de verdade</b> para levar o cavaleiro até a bandeira, pegando todas as moedas.</p>
         </div>
         <div class="lang-toggle" role="tablist" aria-label="Linguagem">
-          <button data-lang="python" role="tab">🐍 Python</button>
-          <button data-lang="java" role="tab">☕ Java</button>
+          <button data-lang="python" role="tab">${langBadge('python', 'mini')}Python</button>
+          <button data-lang="java" role="tab">${langBadge('java', 'mini')}Java</button>
         </div>
       </div>
-      <div class="level-chips" aria-label="Fases"></div>
+      <div class="level-chips" aria-label="Missões"></div>
       <div class="arena-main">
         <div class="card board-card">
           <div class="level-title"></div>
           <div class="board-wrap"><div class="board" id="board"></div></div>
-          <div class="arena-say"><div class="say-bip">${bipSVG('happy')}</div><div class="say-bubble" aria-live="polite"></div></div>
+          <div class="arena-say"><div class="say-knight"></div><div class="say-bubble" aria-live="polite"></div></div>
         </div>
         <div class="card editor-card">
           <div class="ed-top"><span class="ed-file"></span><span class="ed-lines"></span></div>
@@ -427,12 +434,12 @@ const Arena = {
           </div>
           <div class="snips" aria-label="Atalhos de comandos"></div>
           <div class="ed-actions">
-            <button class="btn btn-green ar-run">▶ Rodar</button>
-            <button class="btn btn-white ar-reset" title="Volta o Bip para o começo">↺ Recomeçar</button>
-            <button class="btn btn-white ar-hint">💡 Dica</button>
+            <button class="btn btn-green ar-run">${icon('play')}Rodar</button>
+            <button class="btn btn-white ar-reset" title="Volta o cavaleiro para o começo">${icon('reset')}Recomeçar</button>
+            <button class="btn btn-white ar-hint">${icon('bulb')}Dica</button>
           </div>
           <details class="ref">
-            <summary>📘 Comandos do Bip</summary>
+            <summary>Comandos do Guardinho</summary>
             <div class="ref-body"></div>
           </details>
         </div>
@@ -457,13 +464,13 @@ const Arena = {
       const b = e.target.closest('[data-lv]');
       if (!b || this.running) return;
       const i = +b.dataset.lv;
-      if (!this.unlocked(i)) { this.say('🔒 Passe a fase anterior para liberar esta!', 'sad'); Sound.play('bad'); return; }
+      if (!this.unlocked(i)) { this.say('Passe a missão anterior para liberar esta!', 'sad'); Sound.play('bad'); return; }
       this.saveCode();
       this.loadLevel(i);
     });
     $('.ar-run', v).addEventListener('click', () => this.run());
-    $('.ar-reset', v).addEventListener('click', () => { this.stop(); this.resetBoard(); this.say('Prontinho! O Bip voltou para o começo. 😊'); });
-    $('.ar-hint', v).addEventListener('click', () => this.say('💡 ' + ARENA_LEVELS[this.level].hint[this.lang], 'wow'));
+    $('.ar-reset', v).addEventListener('click', () => { this.stop(); this.resetBoard(); this.say('Prontinho! O Guardinho voltou para o começo.'); });
+    $('.ar-hint', v).addEventListener('click', () => this.say('<b>Dica:</b> ' + ARENA_LEVELS[this.level].hint[this.lang], 'wow'));
     $('.snips', v).addEventListener('click', (e) => {
       const b = e.target.closest('[data-snip]');
       if (b) this.insertSnippet(b.dataset.snip);
@@ -478,6 +485,15 @@ const Arena = {
     ta.addEventListener('keydown', (e) => this.onKey(e));
   },
 
+  renderChips() {
+    $('.level-chips').innerHTML = ARENA_LEVELS.map((l, k) => {
+      const st = this.stars(this.lang, k);
+      const open = this.unlocked(k);
+      const cls = k === this.level ? 'cur' : (open ? (st ? 'done' : 'open') : 'locked');
+      return `<button class="lvl ${cls}" data-lv="${k}" aria-label="Missão ${k + 1}">${open ? `<span>${k + 1}</span>` : icon('lock')}${this.starsHTML(st)}</button>`;
+    }).join('');
+  },
+
   loadLevel(i) {
     if (i >= ARENA_LEVELS.length) i = ARENA_LEVELS.length - 1;
     this.stop();
@@ -486,31 +502,27 @@ const Arena = {
     const v = $('#view-arena');
 
     $$('.lang-toggle button', v).forEach((b) => b.classList.toggle('on', b.dataset.lang === this.lang));
-    $('.level-chips', v).innerHTML = ARENA_LEVELS.map((l, k) => {
-      const st = this.stars(this.lang, k);
-      const cls = k === i ? 'cur' : (this.unlocked(k) ? (st ? 'done' : 'open') : 'locked');
-      return `<button class="lvl ${cls}" data-lv="${k}" aria-label="Fase ${k + 1}">${this.unlocked(k) ? k + 1 : '🔒'}<span class="lvl-stars">${'★'.repeat(st)}${'☆'.repeat(2 - st)}</span></button>`;
-    }).join('');
+    this.renderChips();
 
     const lim = lv.limit[this.lang];
-    $('.level-title', v).innerHTML = `<small>Fase ${i + 1} de ${ARENA_LEVELS.length}</small><h2>${lv.name}</h2><p>${lv.goal}</p>
-      <div class="lvl-goals"><span>⭐ Chegar na bandeira</span><span>⭐⭐ Usar até <b>${lim}</b> linha${lim > 1 ? 's' : ''} de código</span></div>`;
-    $('.ed-file', v).innerHTML = this.lang === 'java' ? '☕ Bip.java' : '🐍 bip.py';
+    $('.level-title', v).innerHTML = `<small>Missão ${i + 1} de ${ARENA_LEVELS.length}</small><h2>${lv.name}</h2><p>${lv.goal}</p>
+      <div class="lvl-goals"><span>${icon('star')}Chegar na bandeira</span><span>${icon('star')}${icon('star')}Usar até <b>${lim}</b> linha${lim > 1 ? 's' : ''} de código</span></div>`;
+    $('.ed-file', v).innerHTML = this.lang === 'java' ? `${langBadge('java', 'mini')}Missao.java` : `${langBadge('python', 'mini')}missao.py`;
 
     const isPy = this.lang === 'python';
     const snips = isPy
-      ? [['frente()', 'frente()'], ['frente(2)', 'frente(2)'], ['direita()', 'direita()'], ['esquerda()', 'esquerda()'], ['🔁 for', 'for i in range(4):\n    §'], ['💬 print', 'print("Oi!")']]
-      : [['robo.frente();', 'robo.frente();'], ['robo.frente(2);', 'robo.frente(2);'], ['robo.direita();', 'robo.direita();'], ['robo.esquerda();', 'robo.esquerda();'], ['🔁 for', 'for (int i = 0; i < 4; i++) {\n    §\n}'], ['💬 println', 'System.out.println("Oi!");']];
+      ? [['frente()', 'frente()'], ['frente(2)', 'frente(2)'], ['direita()', 'direita()'], ['esquerda()', 'esquerda()'], ['for', 'for i in range(4):\n    §'], ['print', 'print("Oi!")']]
+      : [['guardinho.frente();', 'guardinho.frente();'], ['guardinho.frente(2);', 'guardinho.frente(2);'], ['guardinho.direita();', 'guardinho.direita();'], ['guardinho.esquerda();', 'guardinho.esquerda();'], ['for', 'for (int i = 0; i < 4; i++) {\n    §\n}'], ['println', 'System.out.println("Oi!");']];
     $('.snips', v).innerHTML = '<span class="snips-label">Atalhos:</span>' + snips.map(([label, code]) => `<button class="snip" data-snip="${esc(code)}">${esc(label)}</button>`).join('');
 
     $('.ref-body', v).innerHTML = (isPy ? [
       ['frente()', 'anda 1 casa para frente'], ['frente(3)', 'anda 3 casas'], ['direita()', 'vira 90° para a direita'], ['esquerda()', 'vira 90° para a esquerda'],
-      ['for i in range(4):', 'repete 4 vezes as linhas de dentro (com 4 espaços no começo)'], ['print("Oi!")', 'o Bip fala'], ['# texto', 'comentário: o Python ignora']
+      ['for i in range(4):', 'repete 4 vezes as linhas de dentro (com 4 espaços no começo)'], ['print("Oi!")', 'o Guardinho fala'], ['# texto', 'comentário: o Python ignora']
     ] : [
-      ['robo.frente();', 'anda 1 casa para frente'], ['robo.frente(3);', 'anda 3 casas'], ['robo.direita();', 'vira 90° para a direita'], ['robo.esquerda();', 'vira 90° para a esquerda'],
-      ['for (int i = 0; i < 4; i++) { }', 'repete 4 vezes o que está entre as chaves'], ['System.out.println("Oi!");', 'o Bip fala'], ['// texto', 'comentário: o Java ignora']
+      ['guardinho.frente();', 'anda 1 casa para frente'], ['guardinho.frente(3);', 'anda 3 casas'], ['guardinho.direita();', 'vira 90° para a direita'], ['guardinho.esquerda();', 'vira 90° para a esquerda'],
+      ['for (int i = 0; i < 4; i++) { }', 'repete 4 vezes o que está entre as chaves'], ['System.out.println("Oi!");', 'o Guardinho fala'], ['// texto', 'comentário: o Java ignora']
     ]).map(([c, d]) => `<div class="ref-row"><code>${highlight(c, this.lang)}</code><span>${d}</span></div>`).join('') +
-      '<p class="ref-note">ℹ️ Estes são comandos especiais do simulador do Bip. No robô de verdade os nomes mudam (você aprende nas trilhas!), mas a lógica é a mesmíssima.</p>';
+      '<p class="ref-note">Estes são comandos especiais do simulador. No robô de verdade os nomes mudam (você aprende nas trilhas), mas a lógica é a mesmíssima.</p>';
 
     const saved = Store.get('vg_arena_code', {})[this.codeKey()];
     this.ta.value = saved != null ? saved : this.starterCode();
@@ -519,7 +531,7 @@ const Arena = {
     this.sync();
     this.resetBoard();
     const st = this.stars(this.lang, i);
-    this.say(st ? `Você já tem ${'⭐'.repeat(st)} nesta fase. Quer tentar de novo? 😎` : `Fase ${i + 1}: ${lv.goal} Escreva o código e aperte <b>▶ Rodar</b>!`);
+    this.say(st ? `Você já tem ${st} estrela${st > 1 ? 's' : ''} nesta missão. Quer tentar de novo?` : `${lv.goal} Escreva o código e aperte <b>Rodar</b>.`);
   },
 
   /* ---- tabuleiro ---- */
@@ -533,11 +545,11 @@ const Arena = {
       const cls = ['cell', (x + y) % 2 ? 'alt' : ''];
       let inner = '';
       if (ch === '#') cls.push('rock');
-      if (ch === 'G' || ch === 'X') inner += '<span class="flag">🏁</span>';
-      if (ch === 'B') inner += `<span class="bat" data-xy="${x},${y}">⚡</span>`;
+      if (ch === 'G' || ch === 'X') inner += `<span class="cell-flag">${FLAG_SVG}</span>`;
+      if (ch === 'B') inner += `<span class="cell-coin" data-xy="${x},${y}">${COIN_SVG}</span>`;
       cells += `<div class="${cls.join(' ')}">${inner}</div>`;
     }));
-    b.innerHTML = cells + `<div class="bot" id="bot"><div class="bot-in">${botTopSVG()}</div><div class="bot-say" hidden></div></div>`;
+    b.innerHTML = cells + `<div class="bot" id="bot">${boardKnightHTML()}<div class="bot-say" hidden></div></div>`;
     this.bot = $('#bot');
     this.placeBot(true);
   },
@@ -546,20 +558,20 @@ const Arena = {
     if (instant) bot.classList.add('no-anim');
     bot.style.setProperty('--x', this.st.x);
     bot.style.setProperty('--y', this.st.y);
-    $('.bot-in', bot).style.transform = `rotate(${this.angle}deg)`;
+    $('.bot-dir', bot).style.transform = `rotate(${this.angle}deg)`;
     if (instant) { void bot.offsetWidth; bot.classList.remove('no-anim'); }
   },
 
   /* ---- execução ---- */
   run() {
-    if (this.running) { this.stop(); this.say('Programa parado. ✋'); return; }
+    if (this.running) { this.stop(); this.say('Programa parado.'); return; }
     this.resetBoard();
     this.clearHl();
     let actions;
     try {
       const prog = BipLang.parse(this.ta.value, this.lang);
       actions = BipLang.flatten(prog);
-      if (!actions.length) throw BipLang.err(0, 'Escreva algum comando primeiro! 😉');
+      if (!actions.length) throw BipLang.err(0, 'Escreva algum comando primeiro!');
     } catch (e) {
       if (!e.bip) throw e;
       if (e.line) this.markLine(e.line, true);
@@ -569,9 +581,10 @@ const Arena = {
     }
     this.running = true;
     this.ta.readOnly = true;
-    $('.ar-run').innerHTML = '■ Parar';
-    $('.ar-run').classList.replace('btn-green', 'btn-red');
-    this.say('Rodando... 🤖', 'normal');
+    const rb = $('.ar-run');
+    rb.innerHTML = `${icon('x')}Parar`;
+    rb.classList.replace('btn-green', 'btn-red');
+    this.say('Rodando...', 'normal');
     let k = 0;
     const step = () => {
       if (!this.running) return;
@@ -596,8 +609,8 @@ const Arena = {
         const key = nx + ',' + ny;
         if (st.bats.has(key)) {
           st.bats.delete(key);
-          const bat = $(`.bat[data-xy="${key}"]`);
-          if (bat) setTimeout(() => bat.classList.add('got'), this.speed * 0.6);
+          const coin = $(`.cell-coin[data-xy="${key}"]`);
+          if (coin) setTimeout(() => coin.classList.add('got'), this.speed * 0.6);
           setTimeout(() => Sound.play('coin'), this.speed * 0.6);
         }
       } else if (act.a === 'say') {
@@ -617,7 +630,7 @@ const Arena = {
     clearTimeout(this.timer);
     if (this.ta) this.ta.readOnly = false;
     const r = $('.ar-run');
-    if (r) { r.innerHTML = '▶ Rodar'; r.classList.replace('btn-red', 'btn-green'); }
+    if (r && r.classList.contains('btn-red')) { r.innerHTML = `${icon('play')}Rodar`; r.classList.replace('btn-red', 'btn-green'); }
   },
   crash(line, out) {
     this.stop();
@@ -625,7 +638,7 @@ const Arena = {
     setTimeout(() => this.bot && this.bot.classList.remove('crash'), 600);
     this.markLine(line, true);
     Sound.play('crash');
-    this.say(`💥 Ops! Na <b>linha ${line}</b> o Bip ${out ? 'tentou sair do tabuleiro' : 'bateu numa pedra'}. Ajuste o código e tente de novo!`, 'sad', 'err');
+    this.say(`Ops! Na <b>linha ${line}</b> o Guardinho ${out ? 'tentou sair do tabuleiro' : 'bateu numa pedra'}. Ajuste o código e tente de novo.`, 'sad', 'err');
   },
   finish() {
     this.stop();
@@ -633,11 +646,12 @@ const Arena = {
     const lv = ARENA_LEVELS[this.level];
     const onGoal = st.x === st.gx && st.y === st.gy;
     if (!onGoal || st.bats.size) {
-      const faltam = st.bats.size;
-      const msg = !onGoal && faltam ? `O Bip não chegou na bandeira e ainda faltam ${faltam} bateria${faltam > 1 ? 's' : ''} ⚡.`
-        : !onGoal ? 'Quase! O Bip não terminou em cima da bandeira 🏁.'
-        : `Chegou na bandeira, mas faltou pegar ${faltam} bateria${faltam > 1 ? 's' : ''} ⚡!`;
-      this.say(msg + ' Tente de novo, você consegue! 💪', 'sad', 'err');
+      const f = st.bats.size;
+      const moedas = `${f} moeda${f > 1 ? 's' : ''}`;
+      const msg = !onGoal && f ? `O Guardinho não chegou na bandeira e ainda faltam ${moedas}.`
+        : !onGoal ? 'Quase! O Guardinho não terminou em cima da bandeira.'
+        : `Chegou na bandeira, mas faltou pegar ${moedas}!`;
+      this.say(msg + ' Tente de novo, você consegue!', 'sad', 'err');
       Sound.play('bad');
       return;
     }
@@ -656,25 +670,19 @@ const Arena = {
     Sound.play('win');
     confetti(1800);
     const isLast = this.level >= ARENA_LEVELS.length - 1;
-    const nextBtn = isLast ? '' : ' <button class="btn btn-green btn-sm say-next">Próxima fase →</button>';
+    const nextBtn = isLast ? '' : ' <button class="btn btn-green btn-sm say-next">Próxima missão</button>';
     const msg = stars === 2
-      ? `🌟🌟 <b>Perfeito!</b> Código enxuto com ${lines} linha${lines > 1 ? 's' : ''}.${xp ? ` <b>+${xp} XP</b>` : ''}${isLast ? ' Você zerou a Arena! 👑' : ''}`
-      : `⭐ <b>Passou!</b>${xp ? ` <b>+${xp} XP</b>.` : ''} Desafio extra: consegue fazer com até ${lim} linha${lim > 1 ? 's' : ''}? Dica: use o <code>for</code> 🔁`;
+      ? `<b>Perfeito, 2 estrelas!</b> Código enxuto com ${lines} linha${lines > 1 ? 's' : ''}.${xp ? ` <b>+${xp} XP</b>` : ''}${isLast ? ' Você zerou a Arena!' : ''}`
+      : `<b>Passou, 1 estrela!</b>${xp ? ` <b>+${xp} XP</b>.` : ''} Desafio extra: consegue fazer com até ${lim} linha${lim > 1 ? 's' : ''}? Dica: use o <code>for</code>.`;
     this.say(msg + nextBtn, 'happy', 'win');
     afterReward();
-    // atualiza as estrelinhas das fases
-    const cur = this.level;
-    $$('.level-chips .lvl').forEach((b, k) => {
-      const s = this.stars(this.lang, k);
-      b.className = 'lvl ' + (k === cur ? 'cur' : (this.unlocked(k) ? (s ? 'done' : 'open') : 'locked'));
-      b.innerHTML = `${this.unlocked(k) ? k + 1 : '🔒'}<span class="lvl-stars">${'★'.repeat(s)}${'☆'.repeat(2 - s)}</span>`;
-    });
+    this.renderChips();
   },
 
   say(html, mood = 'happy', kind = '') {
     const wrap = $('.arena-say');
     if (!wrap) return;
-    $('.say-bip', wrap).innerHTML = bipSVG(mood);
+    $('.say-knight', wrap).innerHTML = knightSVG(mood);
     const b = $('.say-bubble', wrap);
     b.className = 'say-bubble ' + kind;
     b.innerHTML = html;
@@ -706,8 +714,9 @@ const Arena = {
     if (g) g.classList.add('on');
   },
   positionHl() {
-    const lh = parseFloat(getComputedStyle(this.ta).lineHeight) || 24;
-    const pt = parseFloat(getComputedStyle(this.ta).paddingTop) || 12;
+    const cs = getComputedStyle(this.ta);
+    const lh = parseFloat(cs.lineHeight) || 24;
+    const pt = parseFloat(cs.paddingTop) || 12;
     this.hl.style.transform = `translateY(${pt + (this.hlLine - 1) * lh - this.ta.scrollTop}px)`;
     this.hl.style.height = lh + 'px';
   },
