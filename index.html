@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vanguard Code · Aprenda Python e Java para robôs</title>
+  <meta name="description" content="Site da equipe FTC Vanguard #37520: aprenda Python para LEGO SPIKE e Java para FTC com lições curtinhas, desafios e jogos. Chega de só arrastar blocos!">
+  <meta name="theme-color" content="#6C4DF6">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ===================== BARRA DO TOPO ===================== -->
+  <header class="topbar">
+    <a class="brand" href="#/" aria-label="Vanguard Code - início">
+      <span class="brand-bip" data-bip="happy"></span>
+      <span class="brand-name">Vanguard<b>Code</b><small>#37520</small></span>
+    </a>
+    <nav class="nav" aria-label="Principal">
+      <a href="#/trilha/python" data-nav="python"><span class="ni">🐍</span><span class="nt">Python</span></a>
+      <a href="#/trilha/java" data-nav="java"><span class="ni">☕</span><span class="nt">Java</span></a>
+      <a href="#/arena" data-nav="arena"><span class="ni">🎮</span><span class="nt">Arena</span></a>
+      <a href="#/porque" data-nav="porque" class="hide-sm"><span class="ni">💡</span><span class="nt">Por que código?</span></a>
+    </nav>
+    <div class="stats">
+      <button class="stat stat-streak" id="statStreak" title="Ofensiva: dias seguidos estudando"><span class="si">🔥</span><span class="sv">0</span></button>
+      <button class="stat stat-xp" id="statXp" title="Seus pontos de experiência"><span class="si">⚡</span><span class="sv">0</span></button>
+      <button class="stat stat-profile" id="btnProfile" title="Meu perfil e conquistas" aria-label="Meu perfil e conquistas">👤</button>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ===================== INÍCIO ===================== -->
+    <section id="view-home" class="view">
+
+      <div class="hero">
+        <div class="hero-deco" aria-hidden="true">
+          <span class="d d1">✦</span><span class="d d2">⚙️</span><span class="d d3">✦</span><span class="d d4">⭐</span><span class="d d5">✦</span>
+        </div>
+        <div class="hero-in">
+          <div class="hero-text">
+            <span class="pill">🤖 Feito pela equipe FTC Vanguard #37520</span>
+            <h1>Programe robôs <span class="hl">de verdade!</span></h1>
+            <p class="lead">Aprenda <b>Python</b> para o LEGO® SPIKE™ e <b>Java</b> para o FTC com lições rapidinhas, desafios e muita diversão. Chega de só arrastar blocos: bora escrever código! 🚀</p>
+            <div class="hero-cta">
+              <a class="btn btn-yellow btn-lg" href="#/trilha/python">🐍 Começar com Python</a>
+              <a class="btn btn-ghost btn-lg" href="#/trilha/java">☕ Quero Java!</a>
+            </div>
+            <ul class="hero-badges">
+              <li>⏱️ 5 min por lição</li>
+              <li>🆓 100% grátis</li>
+              <li>📱 Funciona no celular</li>
+            </ul>
+          </div>
+          <div class="hero-art">
+            <div class="hero-bip" data-bip="happy" data-bip-class="bip-xl"></div>
+            <div class="bubble-code bc1"><span class="tk-f">print</span>(<span class="tk-s">"Oi!"</span>)</div>
+            <div class="bubble-code bc2">motor.<span class="tk-f">setPower</span>(<span class="tk-n">1.0</span>);</div>
+            <div class="bubble-code bc3"><span class="tk-k">for</span> i <span class="tk-k">in</span> <span class="tk-f">range</span>(<span class="tk-n">3</span>):</div>
+            <div class="hero-shadow"></div>
+          </div>
+        </div>
+        <svg class="hero-wave" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 C 240 90 480 0 720 30 C 960 60 1200 10 1440 40 L1440 80 L0 80 Z"/></svg>
+      </div>
+
+      <div class="wrap">
+        <div id="continueCard"></div>
+
+        <div class="numbers">
+          <div><b>2</b><span>linguagens de verdade</span></div>
+          <div><b data-count="lessons">20</b><span>lições curtinhas</span></div>
+          <div><b data-count="arena">6</b><span>fases na Arena</span></div>
+          <div><b data-count="ach">12</b><span>conquistas pra ganhar</span></div>
+        </div>
+
+        <!-- Trilhas -->
+        <section class="section" id="trilhas">
+          <h2 class="section-title">Escolha sua aventura</h2>
+          <p class="section-sub">Duas trilhas, uma missão: transformar você em programador(a) de robôs.</p>
+          <div class="tracks">
+            <a class="track-card track-py" href="#/trilha/python">
+              <div class="track-top"><span class="track-emoji">🐍</span><span class="tag">9+ anos · LEGO SPIKE</span></div>
+              <h3>Python</h3>
+              <p class="track-robot">para LEGO® SPIKE™ Prime</p>
+              <pre class="code" data-lang="python">print("Olá, robô!")
+for i in range(3):
+    print("Bip!")</pre>
+              <ul class="track-list">
+                <li>✅ Primeiros comandos e variáveis</li>
+                <li>✅ if, for, while e funções</li>
+                <li>✅ Motores e sensores do SPIKE</li>
+              </ul>
+              <div class="track-prog" data-prog="python"></div>
+              <span class="btn btn-py">Começar trilha</span>
+            </a>
+            <a class="track-card track-java" href="#/trilha/java">
+              <div class="track-top"><span class="track-emoji">☕</span><span class="tag">12+ anos · FTC</span></div>
+              <h3>Java</h3>
+              <p class="track-robot">para FIRST® Tech Challenge</p>
+              <pre class="code" data-lang="java">System.out.println("Olá, FTC!");
+motor.setPower(0.5);
+garra.setPosition(1.0);</pre>
+              <ul class="track-list">
+                <li>✅ Tipos, variáveis e lógica</li>
+                <li>✅ if, for, while e métodos</li>
+                <li>✅ OpMode, motores, servos e gamepad</li>
+              </ul>
+              <div class="track-prog" data-prog="java"></div>
+              <span class="btn btn-java">Começar trilha</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- Blocos x Código -->
+        <section class="section" id="porque">
+          <h2 class="section-title">Dos blocos para o código ✍️</h2>
+          <p class="section-sub">Você já programa com blocos? Então você <b>já pensa como programador</b>! O código é a mesma ideia, só que escrita. Passe o dedo (ou o mouse) nos blocos:</p>
+
+          <div class="bvc card">
+            <div class="bvc-blocks" aria-label="Programa em blocos">
+              <div class="blk blk-event" data-b="0">▶ quando o programa iniciar</div>
+              <div class="blk blk-ctrl" data-b="1">🔁 repetir 4 vezes</div>
+              <div class="blk-inner">
+                <div class="blk blk-motion" data-b="2">⬆️ andar para frente</div>
+                <div class="blk blk-motion" data-b="3">↪️ virar à direita</div>
+              </div>
+              <div class="blk blk-ctrl blk-end" data-b="1"></div>
+            </div>
+            <div class="bvc-arrow" aria-hidden="true">➜</div>
+            <div class="bvc-code">
+              <div class="tabs" role="tablist">
+                <button class="tab on" data-bvc="python" role="tab">🐍 Python</button>
+                <button class="tab" data-bvc="java" role="tab">☕ Java</button>
+              </div>
+              <pre class="code bvc-pre" id="bvcPre"></pre>
+              <p class="bvc-note" id="bvcNote"></p>
+            </div>
+          </div>
+
+          <blockquote class="quote">
+            <span class="quote-bip" data-bip="happy"></span>
+            <p>“Os blocos são as rodinhas da bicicleta. O código é quando você sai pedalando sozinho!” 🚲<cite>Bip, o robô da Vanguard</cite></p>
+          </blockquote>
+
+          <h3 class="mini-title">Por que trocar os blocos pelo código?</h3>
+          <div class="reasons">
+            <div class="reason" style="--rc:#6C4DF6"><span>🚀</span><h4>Mais poder</h4><p>Com código você usa tudo que o robô sabe fazer: matemática, sensores, controle preciso e bibliotecas prontas.</p></div>
+            <div class="reason" style="--rc:#14B8A6"><span>⚡</span><h4>Mais rápido</h4><p>Copiar, colar, buscar e trocar. Aquela “sopa de blocos” enorme cabe em poucas linhas de texto.</p></div>
+            <div class="reason" style="--rc:#F2792B"><span>🏆</span><h4>Coisa de campeão</h4><p>Equipes de ponta do FTC programam em Java para fazer autônomos precisos com sensores, encoders e visão.</p></div>
+            <div class="reason" style="--rc:#E5487A"><span>💼</span><h4>Pra vida toda</h4><p>Python e Java estão entre as linguagens mais usadas do mundo: games, apps, sites e inteligência artificial.</p></div>
+            <div class="reason" style="--rc:#3776D6"><span>🧠</span><h4>Você entende de verdade</h4><p>Os blocos escondem o código. Escrevendo, você sabe exatamente o que o robô está fazendo.</p></div>
+            <div class="reason" style="--rc:#F59E0B"><span>🤝</span><h4>Time mais forte</h4><p>Código em texto é fácil de compartilhar, revisar e guardar versões junto com toda a equipe.</p></div>
+          </div>
+
+          <h3 class="mini-title">Mito ou verdade? <small>(toque nos cartões)</small></h3>
+          <div class="myths">
+            <button class="myth"><span class="myth-front"><b>MITO ❌</b>“Código é só para gênios.”</span><span class="myth-back"><b>VERDADE ✅</b>Se você monta blocos, já pensa como programador. Só falta digitar!</span></button>
+            <button class="myth"><span class="myth-front"><b>MITO ❌</b>“Vou errar demais.”</span><span class="myth-back"><b>VERDADE ✅</b>Todo programador erra! O erro mostra o caminho, e aqui você tem 5 vidas por lição. 😄</span></button>
+            <button class="myth"><span class="myth-front"><b>MITO ❌</b>“Preciso saber inglês.”</span><span class="myth-back"><b>VERDADE ✅</b>São poucas palavras (if, for, print...) e tudo é explicado em português.</span></button>
+          </div>
+        </section>
+
+        <!-- Como funciona -->
+        <section class="section" id="como">
+          <h2 class="section-title">Como funciona?</h2>
+          <div class="steps3">
+            <div class="s3"><div class="s3-n">1</div><span class="s3-i">📖</span><h4>Aprenda</h4><p>Lições curtinhas explicam cada conceito com exemplos de robô.</p></div>
+            <div class="s3"><div class="s3-n">2</div><span class="s3-i">🧩</span><h4>Pratique</h4><p>Escolha respostas, complete lacunas e monte código linha por linha.</p></div>
+            <div class="s3"><div class="s3-n">3</div><span class="s3-i">🎮</span><h4>Desafie-se</h4><p>Na Arena você digita código e vê o Bip obedecer na hora!</p></div>
+            <div class="s3"><div class="s3-n">4</div><span class="s3-i">🏅</span><h4>Evolua</h4><p>Ganhe XP, mantenha sua ofensiva 🔥 e desbloqueie conquistas.</p></div>
+          </div>
+          <div class="arena-promo card">
+            <div class="ap-board" aria-hidden="true">
+              <span></span><span></span><span class="r">🪨</span><span>🏁</span>
+              <span class="b">🤖</span><span></span><span></span><span>⚡</span>
+            </div>
+            <div class="ap-text">
+              <h3>🎮 Arena do Bip</h3>
+              <p>Escreva <code>frente(3)</code>, <code>direita()</code> e <code>for</code> de verdade, aperte ▶ e veja o robô andar no tabuleiro. Dá pra jogar em Python ou Java!</p>
+              <a href="#/arena" class="btn btn-green">Jogar agora</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sobre -->
+        <section class="section about" id="sobre">
+          <div class="about-card card">
+            <div class="about-text">
+              <span class="pill pill-violet">Quem somos</span>
+              <h2>Somos a Vanguard #37520 💜</h2>
+              <p>A Vanguard é uma equipe da <b>FIRST® Tech Challenge</b> formada por estudantes apaixonados por robótica. No nosso robô a gente programa em <b>Java</b>, e muitos de nós começamos lá atrás com <b>blocos</b> e LEGO.</p>
+              <p>Criamos este site para ajudar crianças e adolescentes a darem o próximo passo: sair dos blocos e programar com as <b>mesmas linguagens que os profissionais usam</b>. Compartilhar conhecimento faz parte do espírito <i>FIRST</i>!</p>
+              <div class="about-chips"><span>🤝 Trabalho em equipe</span><span>🧪 Muita curiosidade</span><span>🔧 Mão na massa</span></div>
+            </div>
+            <div class="about-art">
+              <div data-bip="happy" data-bip-class="bip-lg"></div>
+              <div class="team-badge">VANGUARD<b>#37520</b><small>FTC Team</small></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ===================== TRILHA ===================== -->
+    <section id="view-path" class="view" hidden></section>
+
+    <!-- ===================== ARENA ===================== -->
+    <section id="view-arena" class="view" hidden></section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-in">
+      <div class="footer-brand"><span data-bip="happy"></span><div><b>Vanguard Code</b><small>Feito com 💜 pela equipe FTC Vanguard #37520</small></div></div>
+      <nav class="footer-links">
+        <a href="#/trilha/python">Trilha Python</a>
+        <a href="#/trilha/java">Trilha Java</a>
+        <a href="#/arena">Arena do Bip</a>
+        <a href="#/porque">Por que código?</a>
+      </nav>
+      <p class="legal">LEGO® e SPIKE™ são marcas do LEGO Group. FIRST® e FIRST® Tech Challenge são marcas da FIRST®. Este é um projeto educacional da equipe e não é um site oficial dessas organizações. Seu progresso fica salvo só neste navegador.</p>
+    </div>
+  </footer>
+
+  <!-- Camadas: lição, modal, avisos, confete -->
+  <div id="lesson" class="lesson" hidden role="dialog" aria-modal="true" aria-label="Lição"></div>
+  <div id="modal" class="modal" hidden></div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+
+  <script src="js/utils.js"></script>
+  <script src="js/courses.js"></script>
+  <script src="js/arena.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
