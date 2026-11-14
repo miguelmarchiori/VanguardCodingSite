@@ -2,8 +2,8 @@
 
 Site da equipe **FTC Vanguard #37520** que ensina crianças e adolescentes a trocar a programação em blocos por **código de verdade**:
 
-- **Python** para LEGO® SPIKE™ Prime (10 lições)
-- **Java** para FIRST® Tech Challenge (10 lições)
+- **Python** para LEGO® SPIKE™ Prime: 8 unidades, 31 lições, do `print` até seguidor de linha proporcional, giroscópio, multitarefa e máquina de estados
+- **Java** para FIRST® Tech Challenge: 8 unidades, 31 lições, do `println` até mecanum, encoders, IMU, PID, máquina de estados e AprilTags
 - **Arena**: 6 missões em que o aluno digita Python ou Java e vê o cavaleiro **Guardinho** andar no tabuleiro
 - **Contas com Google + ranking**: progresso salvo na nuvem e ligas de Escudeiro a Lenda
 
@@ -40,7 +40,9 @@ index.html            página única (início, trilhas, arena, ranking)
 css/style.css         visual
 img/                  logo da Vanguard, favicon e logos do Python e do Java
 js/utils.js           destaque de código, mascote Guardinho, ícones, sons, confete
-js/courses.js         TODO o conteúdo das lições  ← edite aqui!
+js/courses.js         unidades 1 a 3 das duas trilhas  ← edite aqui!
+js/courses-python-plus.js  unidades 4 a 8 de Python (SPIKE avançado)
+js/courses-java-plus.js    unidades 4 a 8 de Java (FTC avançado)
 js/arena.js           missões da Arena + mini-interpretador Python/Java
 js/firebase-config.js configuração do Firebase (login e ranking)
 js/cloud.js           login com Google, sincronização e ranking
@@ -51,7 +53,7 @@ firestore.rules       regras de segurança do banco
 
 ## Como adicionar ou editar lições
 
-Tudo fica em `js/courses.js`. Cada lição é uma lista de passos:
+As lições ficam em `js/courses.js` e nos arquivos `courses-*-plus.js`. Cada lição tem um `id` fixo (é ele que guarda o progresso do aluno, então nunca troque o id de uma lição existente) e uma lista de passos:
 
 | tipo     | o que faz                         | campos principais |
 |----------|-----------------------------------|-------------------|

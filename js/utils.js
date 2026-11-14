@@ -44,7 +44,7 @@ const HL_LANGS = {
     re: /(#[^\n]*)|("(?:[^"\\\n]|\\.)*"?|'(?:[^'\\\n]|\\.)*'?)|(@[A-Za-z]\w*)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_À-ÿ][\wÀ-ÿ]*)/g
   },
   java: {
-    kw: new Set(['public', 'private', 'protected', 'class', 'extends', 'implements', 'void', 'int', 'double', 'float', 'boolean', 'char', 'long', 'new', 'return', 'if', 'else', 'for', 'while', 'do', 'static', 'final', 'import', 'package', 'this', 'super', 'break', 'continue', 'try', 'catch', 'throw', 'throws', 'switch', 'case', 'default']),
+    kw: new Set(['public', 'private', 'protected', 'class', 'extends', 'implements', 'void', 'int', 'double', 'float', 'boolean', 'char', 'long', 'new', 'return', 'if', 'else', 'for', 'while', 'do', 'static', 'final', 'import', 'package', 'this', 'super', 'break', 'continue', 'try', 'catch', 'throw', 'throws', 'switch', 'case', 'default', 'enum', 'instanceof']),
     consts: new Set(['true', 'false', 'null']),
     re: /(\/\/[^\n]*)|("(?:[^"\\\n]|\\.)*"?|'(?:[^'\\\n]|\\.)*'?)|(@[A-Za-z]\w*)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_À-ÿ][\wÀ-ÿ]*)/g
   }

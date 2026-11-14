@@ -7,6 +7,9 @@
      fill   → completar lacuna     { q, code (com ___), options, a (texto), why? }
      order  → ordenar linhas       { q, lines (ordem certa), alts? (outras ordens válidas), why? }
      type   → digitar código       { q, a: [respostas aceitas], ph?, why? }
+   Cada lição tem um id fixo (é ele que guarda o progresso do aluno):
+   nunca troque o id de uma lição que já existe.
+   As unidades avançadas ficam em courses-python-plus.js e courses-java-plus.js.
    Para criar uma lição nova, é só copiar um bloco e editar.
    ========================================================= */
 'use strict';
@@ -31,6 +34,7 @@ const COURSES = {
         color: '#3776D6',
         lessons: [
           {
+            id: 'py-print',
             title: 'Seu primeiro código',
             steps: [
               { t: 'teach', title: 'Diga olá!',
@@ -56,6 +60,7 @@ const COURSES = {
             ]
           },
           {
+            id: 'py-variaveis',
             title: 'Variáveis',
             steps: [
               { t: 'teach', title: 'Caixinhas de memória',
@@ -79,6 +84,7 @@ const COURSES = {
             ]
           },
           {
+            id: 'py-contas',
             title: 'Fazendo contas',
             steps: [
               { t: 'teach', title: 'Python é uma calculadora',
@@ -108,6 +114,7 @@ const COURSES = {
         color: '#14B8A6',
         lessons: [
           {
+            id: 'py-if',
             title: 'Decisões com if',
             steps: [
               { t: 'teach', title: 'Se... senão!',
@@ -130,6 +137,7 @@ const COURSES = {
             ]
           },
           {
+            id: 'py-for',
             title: 'Repetindo com for',
             steps: [
               { t: 'teach', title: 'Repita sem copiar!',
@@ -150,6 +158,7 @@ const COURSES = {
             ]
           },
           {
+            id: 'py-while',
             title: 'Loop while',
             steps: [
               { t: 'teach', title: 'Enquanto for verdade...',
@@ -171,6 +180,7 @@ const COURSES = {
             ]
           },
           {
+            id: 'py-funcoes',
             title: 'Funções',
             steps: [
               { t: 'teach', title: 'Crie seus próprios comandos',
@@ -199,6 +209,7 @@ const COURSES = {
         color: '#F59E0B',
         lessons: [
           {
+            id: 'spike-hub',
             title: 'Conhecendo o Hub',
             steps: [
               { t: 'teach', title: 'Hora do robô!',
@@ -221,6 +232,7 @@ const COURSES = {
             ]
           },
           {
+            id: 'spike-motores',
             title: 'Motores em ação',
             steps: [
               { t: 'teach', title: 'Girando motores',
@@ -242,6 +254,7 @@ const COURSES = {
             ]
           },
           {
+            id: 'spike-sensores',
             title: 'Sensores',
             steps: [
               { t: 'teach', title: 'O robô enxerga!',
@@ -290,6 +303,7 @@ const COURSES = {
         color: '#F2792B',
         lessons: [
           {
+            id: 'java-print',
             title: 'Seu primeiro código',
             steps: [
               { t: 'teach', title: 'Olá, Java!',
@@ -312,6 +326,7 @@ const COURSES = {
             ]
           },
           {
+            id: 'java-tipos',
             title: 'Tipos de variáveis',
             steps: [
               { t: 'teach', title: 'Cada caixa tem um tipo',
@@ -334,6 +349,7 @@ const COURSES = {
             ]
           },
           {
+            id: 'java-logica',
             title: 'Contas e lógica',
             steps: [
               { t: 'teach', title: 'Matemática e lógica',
@@ -361,6 +377,7 @@ const COURSES = {
         color: '#E5487A',
         lessons: [
           {
+            id: 'java-if',
             title: 'Decisões com if',
             steps: [
               { t: 'teach', title: 'Se... senão',
@@ -382,6 +399,7 @@ const COURSES = {
             ]
           },
           {
+            id: 'java-for',
             title: 'Repetindo com for',
             steps: [
               { t: 'teach', title: 'O for tem 3 partes',
@@ -401,6 +419,7 @@ const COURSES = {
             ]
           },
           {
+            id: 'java-while',
             title: 'Loop while',
             steps: [
               { t: 'teach', title: 'Enquanto...',
@@ -422,6 +441,7 @@ const COURSES = {
             ]
           },
           {
+            id: 'java-metodos',
             title: 'Métodos',
             steps: [
               { t: 'teach', title: 'Crie seus próprios comandos',
@@ -448,6 +468,7 @@ const COURSES = {
         color: '#6C4DF6',
         lessons: [
           {
+            id: 'ftc-opmode',
             title: 'Seu primeiro OpMode',
             steps: [
               { t: 'teach', title: 'O esqueleto do OpMode',
@@ -467,6 +488,7 @@ const COURSES = {
             ]
           },
           {
+            id: 'ftc-motores',
             title: 'Motores e servos',
             steps: [
               { t: 'teach', title: 'Ligando motores',
@@ -490,6 +512,7 @@ const COURSES = {
             ]
           },
           {
+            id: 'ftc-gamepad',
             title: 'Gamepad e telemetria',
             steps: [
               { t: 'teach', title: 'Controlando com o gamepad',

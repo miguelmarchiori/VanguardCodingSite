@@ -4,6 +4,24 @@
    ========================================================= */
 'use strict';
 
+/* ---------- Trilhas ---------- */
+const FLAT = {};
+Object.keys(COURSES).forEach((cid) => {
+  FLAT[cid] = [];
+  COURSES[cid].units.forEach((u, ui) => u.lessons.forEach((l, li) => FLAT[cid].push(Object.assign({}, l, { unit: ui, li, last: li === u.lessons.length - 1 }))));
+});
+/* o progresso é guardado pelo id da lição ("python:py-print"), que nunca muda */
+const lessonKey = (cid, i) => cid + ':' + FLAT[cid][i].id;
+function migrateDone(done) {
+  const out = {};
+  Object.keys(done || {}).forEach((k) => {
+    const m = /^(python|java)-(\d+)$/.exec(k);   // formato antigo: posição da lição
+    if (m && FLAT[m[1]] && FLAT[m[1]][+m[2]]) out[lessonKey(m[1], +m[2])] = done[k];
+    else out[k] = done[k];
+  });
+  return out;
+}
+
 /* ---------- Estado ---------- */
 const DEFAULT_STATE = {
   xp: 0, streak: 0, lastDay: null, daily: { day: null, xp: 0 },
@@ -14,7 +32,7 @@ const freshState = () => JSON.parse(JSON.stringify(DEFAULT_STATE));
 function normalizeState(x) {
   const s = Object.assign(freshState(), x || {});
   s.daily = s.daily || { day: null, xp: 0 };
-  s.done = s.done || {};
+  s.done = migrateDone(s.done);
   s.arena = s.arena || {};
   s.achievements = s.achievements || {};
   return s;
@@ -46,14 +64,11 @@ function addXP(n) {
   save();
 }
 
-/* ---------- Trilhas ---------- */
-const FLAT = {};
-Object.keys(COURSES).forEach((cid) => {
-  FLAT[cid] = [];
-  COURSES[cid].units.forEach((u, ui) => u.lessons.forEach((l, li) => FLAT[cid].push(Object.assign({}, l, { unit: ui, li, last: li === u.lessons.length - 1 }))));
-});
+/* ---------- Progresso nas trilhas ---------- */
 const totalLessons = (cid) => FLAT[cid].length;
-const isDone = (cid, i) => !!S.done[cid + '-' + i];
+const isDone = (cid, i) => !!S.done[lessonKey(cid, i)];
+const isDoneId = (cid, id) => !!S.done[cid + ':' + id];
+const unitDone = (cid, ui) => FLAT[cid].every((l, i) => l.unit !== ui || isDone(cid, i));
 const countDone = (cid) => cid ? FLAT[cid].filter((_, i) => isDone(cid, i)).length : countDone('python') + countDone('java');
 const isUnlocked = (cid, i) => S.mentor || i === 0 || isDone(cid, i - 1);
 const nextLesson = (cid) => FLAT[cid].findIndex((_, i) => !isDone(cid, i));
@@ -106,7 +121,10 @@ const ACHIEVEMENTS = [
   { id: 'xp100', icon: 'bolt', name: 'Cem de energia', desc: 'Junte 100 XP', test: () => S.xp >= 100 },
   { id: 'arena3', icon: 'gamepad', name: 'Piloto de teste', desc: 'Passe 3 missões da Arena', test: () => arenaCount() >= 3 },
   { id: 'stars', icon: 'star', name: 'Código enxuto', desc: 'Ganhe 2 estrelas em uma missão da Arena', test: () => Object.values(S.arena).some((v) => v >= 2) },
-  { id: 'arenaall', icon: 'crown', name: 'Rei da Arena', desc: 'Passe todas as missões da Arena', test: () => arenaCount() >= ARENA_LEVELS.length }
+  { id: 'arenaall', icon: 'crown', name: 'Rei da Arena', desc: 'Passe todas as missões da Arena', test: () => arenaCount() >= ARENA_LEVELS.length },
+  { id: 'robo', icon: 'bolt', name: 'Mão na massa', desc: 'Complete a unidade de robô (SPIKE ou FTC)', test: () => unitDone('python', 2) || unitDone('java', 2) },
+  { id: 'controle', icon: 'target', name: 'Engenheiro(a) de controle', desc: 'Complete uma lição de controle P', test: () => isDoneId('python', 'spike-reto') || isDoneId('java', 'ftc-controle-p') },
+  { id: 'avancado', icon: 'trophy', name: 'Nível competição', desc: 'Complete a unidade Robótica avançada de uma trilha', test: () => unitDone('python', COURSES.python.units.length - 1) || unitDone('java', COURSES.java.units.length - 1) }
 ];
 const achHTML = (a, got) => `<div class="ach ${got ? 'got' : ''}" title="${esc(a.desc)}"><span class="ach-ic">${icon(a.icon)}</span><div><b>${a.name}</b><small>${a.desc}</small></div></div>`;
 function checkAchievements() {
@@ -460,7 +478,7 @@ function showPath(cid) {
         <button class="guide-btn" data-guide="${ui}" title="Resumo dos conceitos desta unidade">${icon('book')}<span>Guia</span></button>
       </div>
       <div class="nodes">${nodes}
-        <div class="unit-knight ${ui % 2 ? 'left' : 'right'}" aria-hidden="true">${knightSVG(ui === 2 ? 'wow' : (ui === 1 ? 'normal' : 'happy'))}</div>
+        <div class="unit-knight ${ui % 2 ? 'left' : 'right'}" aria-hidden="true">${knightSVG(['happy', 'normal', 'wow'][ui % 3])}</div>
       </div>
     </section>`;
   });
@@ -812,7 +830,7 @@ function finishLesson() {
   LS.mode = 'result';
   const perfect = LS.mistakes === 0;
   const xp = LS.review ? 5 : 10 + (perfect ? 5 : 0);
-  const key = LS.cid + '-' + LS.i;
+  const key = lessonKey(LS.cid, LS.i);
   const firstTime = !S.done[key];
   const leagueBefore = leagueOf(S.xp).name;
   S.done[key] = true;
@@ -826,13 +844,13 @@ function finishLesson() {
   const acc = Math.round((100 * graded) / (graded + LS.mistakes));
   const C = COURSES[LS.cid];
   const nextI = LS.i + 1 < totalLessons(LS.cid) ? LS.i + 1 : -1;
-  const unitDone = LS.lesson.last && firstTime;
+  const unitFinished = LS.lesson.last && firstTime;
 
   $('.ls-top').classList.add('hide');
   $('.ls-fill').style.width = '100%';
   $('.ls-inner').innerHTML = `<div class="result">
     <div class="res-knight">${knightSVG('happy', 'knight-lg')}</div>
-    <h1>${unitDone ? 'Unidade completa!' : 'Lição completa!'}</h1>
+    <h1>${unitFinished ? 'Unidade completa!' : 'Lição completa!'}</h1>
     <p class="res-sub">${S.name ? `Mandou bem, ${esc(S.name)}!` : 'Mandou muito bem!'} ${perfect ? 'Nenhum erro, uau.' : 'Cada erro te deixou mais esperto(a).'}</p>
     <div class="res-cards">
       <div class="rc rc-xp"><small>XP ganho</small><b>${icon('bolt')}${xp}</b></div>
