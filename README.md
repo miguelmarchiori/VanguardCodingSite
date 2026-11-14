@@ -31,6 +31,8 @@ Pronto: aparece o botão **Entrar com Google** e a página **Ranking** passa a f
 
 **Moderação:** se alguém colocar um apelido impróprio, apague ou edite o documento dele em Firestore → `players`.
 
+**Cargos especiais:** o selo dourado com coroa (ex.: *Criador*) é configurado em [`js/cargos.js`](js/cargos.js). Para dar um cargo a alguém, copie o ID do documento da pessoa em Firestore → `players` e adicione uma linha no arquivo. O cargo fica preso ao ID da conta, então ninguém ganha o selo só copiando o apelido.
+
 ## Estrutura
 
 ```
@@ -42,6 +44,7 @@ js/courses.js         TODO o conteúdo das lições  ← edite aqui!
 js/arena.js           missões da Arena + mini-interpretador Python/Java
 js/firebase-config.js configuração do Firebase (login e ranking)
 js/cloud.js           login com Google, sincronização e ranking
+js/cargos.js          cargos especiais (selo com coroa no ranking)
 js/app.js             estado, rotas, mapa da trilha, lições, perfil, ranking
 firestore.rules       regras de segurança do banco
 ```

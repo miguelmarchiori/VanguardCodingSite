@@ -74,11 +74,23 @@ const leaguePill = (xp) => { const l = leagueOf(xp); return `<span class="league
 /* ---------- Avatares ---------- */
 const AV_COLORS = ['#6A2BD9', '#3776D6', '#0E9E8A', '#E5487A', '#F2792B', '#D99A00', '#2BA346', '#8B4DFF'];
 function avatar(name, id, size = '', photo = '') {
-  if (photo) return `<img class="avatar ${size}" src="${esc(photo)}" alt="" referrerpolicy="no-referrer">`;
-  let h = 0;
-  for (const ch of String(id || name || '?')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  const letter = (cleanName(name) || '?').charAt(0).toUpperCase();
-  return `<span class="avatar shield ${size}" style="--ac:${AV_COLORS[h % AV_COLORS.length]}">${esc(letter)}</span>`;
+  let inner;
+  if (photo) inner = `<img class="avatar ${size}" src="${esc(photo)}" alt="" referrerpolicy="no-referrer">`;
+  else {
+    let h = 0;
+    for (const ch of String(id || name || '?')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const letter = (cleanName(name) || '?').charAt(0).toUpperCase();
+    inner = `<span class="avatar shield ${size}" style="--ac:${AV_COLORS[h % AV_COLORS.length]}">${esc(letter)}</span>`;
+  }
+  const c = cargoOf(id);
+  return c ? `<span class="av-wrap ${size} ${c.estilo === 'purple' ? 'purple' : ''}">${inner}<span class="av-crown">${icon('crown')}</span></span>` : inner;
+}
+
+/* ---------- Cargos especiais (lista em js/cargos.js) ---------- */
+const cargoOf = (id) => (typeof CARGOS !== 'undefined' && id && CARGOS[id]) || null;
+function cargoBadge(id, cls = '') {
+  const c = cargoOf(id);
+  return c ? `<span class="role-badge ${c.estilo === 'purple' ? 'purple' : ''} ${cls}" title="${esc(c.descricao || c.titulo)}">${icon('crown')}${esc(c.titulo)}</span>` : '';
 }
 
 /* ---------- Conquistas ---------- */
@@ -164,6 +176,7 @@ async function adoptCloudState(u, remote) {
   saveLocal();
   route();
   if (isNew) welcomeModal();
+  else if (cargoOf(u.uid)) toast(`${icon('crown', 'ic-crown')}<span>Bem-vindo de volta, <b>${esc(S.name)}</b>! ${esc(cargoOf(u.uid).titulo)} da VanCode na área.</span>`, 'crown');
   else toast(`Bem-vindo(a) de volta, <b>${esc(S.name)}</b>!`);
 }
 
@@ -905,17 +918,17 @@ function renderRanking() {
     const order = [1, 0, 2].filter((k) => top3[k]);
     const podium = `<div class="podium">${order.map((k) => {
       const r = top3[k];
-      return `<div class="pod pod-${k + 1} ${u && r.id === u.uid ? 'me' : ''}">
-        ${k === 0 ? `<span class="pod-crown">${icon('crown')}</span>` : ''}
+      return `<div class="pod pod-${k + 1} ${u && r.id === u.uid ? 'me' : ''} ${cargoOf(r.id) ? 'staff' : ''}">
+        ${k === 0 && !cargoOf(r.id) ? `<span class="pod-crown">${icon('crown')}</span>` : ''}
         ${avatar(r.name, r.id, 'lg')}
         <b class="pod-name">${esc(r.name)}</b>
-        ${leaguePill(r.xp)}
+        ${cargoBadge(r.id)}${leaguePill(r.xp)}
         <div class="pod-base"><span class="pod-n">${k + 1}</span><span class="pod-xp">${r.xp} XP</span></div>
       </div>`;
     }).join('')}</div>`;
-    const list = rows.slice(3).map((r, k) => `<li class="rank-row ${u && r.id === u.uid ? 'me' : ''}">
+    const list = rows.slice(3).map((r, k) => `<li class="rank-row ${u && r.id === u.uid ? 'me' : ''} ${cargoOf(r.id) ? 'staff' : ''}">
       <span class="rk">${k + 4}</span>${avatar(r.name, r.id)}
-      <span class="rn"><b>${esc(r.name)}</b><small>${plural(r.lessons || 0, 'lição', 'lições')} · ${plural(r.arena || 0, 'missão', 'missões')}</small></span>
+      <span class="rn"><span class="rn-top"><b>${esc(r.name)}</b>${cargoBadge(r.id)}</span><small>${plural(r.lessons || 0, 'lição', 'lições')} · ${plural(r.arena || 0, 'missão', 'missões')}</small></span>
       ${leaguePill(r.xp)}<span class="rx">${r.xp} XP</span>
     </li>`).join('');
     main = podium + (list ? `<ol class="rank-list">${list}</ol>` : '');
@@ -926,7 +939,8 @@ function renderRanking() {
   const prog = nl ? Math.round(((S.xp - lg.min) / (nl.min - lg.min)) * 100) : 100;
   const me = u
     ? `<div class="card me-card">
-        <div class="me-top">${avatar(S.name, u.uid, 'lg', u.photoURL)}<div><b>${esc(S.name || 'Cavaleiro')}</b>${leaguePill(S.xp)}</div></div>
+        <div class="me-top">${avatar(S.name, u.uid, 'lg', u.photoURL)}<div><b>${esc(S.name || 'Cavaleiro')}</b><span class="me-pills">${cargoBadge(u.uid)}${leaguePill(S.xp)}</span></div></div>
+        ${cargoOf(u.uid) ? `<p class="cargo-line">${esc(cargoOf(u.uid).descricao || '')}</p>` : ''}
         <div class="me-stats"><div><b>${S.xp}</b><small>XP</small></div><div><b>${myPos ? '#' + myPos : '-'}</b><small>posição</small></div><div><b>${currentStreak()}</b><small>ofensiva</small></div></div>
         <div class="me-next"><div class="bar"><div style="width:${prog}%;--tc:${lg.color}"></div></div><small>${nl ? `Faltam <b>${nl.min - S.xp} XP</b> para ${nl.name}` : 'Você chegou ao topo: Lenda!'}</small></div>
       </div>`
@@ -972,7 +986,8 @@ function showProfile() {
           <small class="muted">Conectado como ${esc(u.email || u.displayName || 'conta Google')} · ${leaguePill(S.xp)}</small>
         </div>
         <button class="btn btn-white btn-sm" id="pfLogout">${icon('logout')}Sair</button>
-      </div>`
+      </div>
+      ${cargoOf(u.uid) ? `<div class="cargo-card ${cargoOf(u.uid).estilo === 'purple' ? 'purple' : ''}"><span class="cargo-ic">${icon('crown')}</span><div><small>Cargo especial</small><b>${esc(cargoOf(u.uid).titulo)}</b><p>${esc(cargoOf(u.uid).descricao || '')}</p></div></div>` : ''}`
     : `<div class="pf-account guest">
         ${knightSVG('happy', 'knight-md')}
         <div class="pf-acc-text">

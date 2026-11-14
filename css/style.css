@@ -154,6 +154,42 @@ pre.code.mini { font-size: 13px; padding: 10px 12px; margin: 6px 0 0; box-shadow
   color: var(--lc); background: color-mix(in srgb, var(--lc) 13%, #fff); border: 1.5px solid color-mix(in srgb, var(--lc) 35%, #fff);
 }
 
+/* ---------- Cargos especiais ---------- */
+.av-wrap { --cg: var(--gold); position: relative; display: inline-grid; flex-shrink: 0; }
+.av-wrap.purple { --cg: var(--brand-2); }
+.av-wrap > .avatar { filter: drop-shadow(0 0 0 var(--cg)) drop-shadow(0 0 3px var(--cg)); }
+.av-crown { position: absolute; top: -11px; left: 50%; transform: translateX(-50%) rotate(-10deg); color: var(--cg); display: flex; filter: drop-shadow(0 1.5px 0 rgba(120, 80, 0, .7)); }
+.av-crown .ic { width: 16px; height: 16px; }
+.av-wrap.lg .av-crown { top: -19px; }
+.av-wrap.lg .av-crown .ic { width: 26px; height: 26px; }
+.role-badge {
+  position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px 2px 7px; border-radius: 99px;
+  font: 900 11px var(--font); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+  color: #4A3200; background: linear-gradient(135deg, #FFE68A, #FFC21A 55%, #E5A300); box-shadow: 0 2px 0 #B07A00, inset 0 1px 0 rgba(255, 255, 255, .65);
+}
+.role-badge.purple { color: #fff; background: linear-gradient(135deg, #A777FF, #6A2BD9); box-shadow: 0 2px 0 #45168F, inset 0 1px 0 rgba(255, 255, 255, .35); }
+.role-badge .ic { width: 13px; height: 13px; }
+.role-badge::after { content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .75), transparent); animation: shine 3.2s ease-in-out infinite; }
+@keyframes shine { 0% { left: -60%; } 45%, 100% { left: 130%; } }
+.rank-row.staff { border-color: #FFD24D; background: linear-gradient(90deg, #FFF6D6, #fff 65%); box-shadow: 0 0 0 3px rgba(255, 194, 26, .18); }
+.rank-row.staff.me { border-color: #FFC21A; }
+.rn-top { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 7px; min-width: 0; }
+.rn-top b { min-width: 0; }
+.pod.staff .pod-name { color: var(--gold-t); }
+.pod .role-badge { margin-bottom: -2px; }
+.me-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; }
+.cargo-line { margin: -4px 0 12px; font-size: 13px; font-weight: 800; color: var(--gold-t); }
+.cargo-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin: -4px 0 18px; border-radius: 18px; background: linear-gradient(120deg, #FFF3C4, #FFF9E6 60%); border: 2px solid #FFE08A; }
+.cargo-card.purple { background: linear-gradient(120deg, #EDE2FF, #F7F2FF 60%); border-color: #D9C6FF; }
+.cargo-ic { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #FFE68A, #FFC21A 55%, #E5A300); color: #6B4700; box-shadow: 0 3px 0 #B07A00; flex-shrink: 0; }
+.cargo-card.purple .cargo-ic { background: linear-gradient(135deg, #A777FF, #6A2BD9); color: #fff; box-shadow: 0 3px 0 #45168F; }
+.cargo-ic .ic { width: 26px; height: 26px; }
+.cargo-card small { display: block; font-weight: 900; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-t); }
+.cargo-card b { display: block; font: 800 22px var(--font-h); line-height: 1.1; }
+.cargo-card p { margin: 2px 0 0; color: var(--muted); font-weight: 700; font-size: 14px; }
+.toast.crown { background: var(--gold-l); border-color: #FFE49A; }
+.toast .ic-crown { color: var(--gold-d); width: 26px; height: 26px; flex-shrink: 0; }
+
 /* ---------- Hero ---------- */
 .hero {
   position: relative; color: #fff; overflow: hidden; padding: 60px 0 128px; background-color: var(--night);
