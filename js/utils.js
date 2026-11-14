@@ -123,34 +123,101 @@ function langBadge(lang, cls = '') {
 }
 
 /* ---------- Guardinho, o cavaleiro mascote (SVG original) ---------- */
+/* Degradês compartilhados por todos os cavaleiros da página (um único <defs>, fora de qualquer elemento escondido) */
+const KNIGHT_DEFS = `<svg class="knight-defs" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <linearGradient id="kgMetal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FAFBFE"/><stop offset=".55" stop-color="#DCE1EB"/><stop offset="1" stop-color="#AEB7C9"/></linearGradient>
+    <linearGradient id="kgMetalD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E4E8F0"/><stop offset="1" stop-color="#A3ACBF"/></linearGradient>
+    <linearGradient id="kgPurple" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8F55FF"/><stop offset="1" stop-color="#5A21C4"/></linearGradient>
+    <linearGradient id="kgPlume" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B07CFF"/><stop offset=".6" stop-color="#7B3BEA"/><stop offset="1" stop-color="#5A21C4"/></linearGradient>
+    <linearGradient id="kgGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFDD66"/><stop offset="1" stop-color="#E5A300"/></linearGradient>
+    <linearGradient id="kgVisor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E1858"/><stop offset="1" stop-color="#140826"/></linearGradient>
+    <linearGradient id="kgBlade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".5" stop-color="#E3E8F1"/><stop offset=".51" stop-color="#BCC5D5"/><stop offset="1" stop-color="#D3D9E4"/></linearGradient>
+  </defs>
+</svg>`;
+
 function knightSVG(mood = 'happy', cls = '') {
-  const G = '#FFC21A';
-  const eyes = {
-    happy: `<path d="M37 64 q6 -8 12 0" stroke="${G}" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M71 64 q6 -8 12 0" stroke="${G}" stroke-width="4.5" fill="none" stroke-linecap="round"/>`,
-    normal: `<g class="k-eye"><ellipse cx="43" cy="62" rx="6.5" ry="8" fill="#fff"/><circle cx="44.5" cy="63.5" r="3.6" fill="#1C0D33"/><circle cx="46" cy="61" r="1.4" fill="#fff"/></g><g class="k-eye"><ellipse cx="77" cy="62" rx="6.5" ry="8" fill="#fff"/><circle cx="78.5" cy="63.5" r="3.6" fill="#1C0D33"/><circle cx="80" cy="61" r="1.4" fill="#fff"/></g>`,
-    sad: `<path d="M35 53 l11 4" stroke="${G}" stroke-width="3.5" stroke-linecap="round"/><path d="M85 53 l-11 4" stroke="${G}" stroke-width="3.5" stroke-linecap="round"/><ellipse cx="42" cy="66" rx="4.5" ry="5" fill="#fff"/><ellipse cx="78" cy="66" rx="4.5" ry="5" fill="#fff"/>`,
-    wow: `<circle cx="43" cy="62" r="8.5" fill="#fff"/><circle cx="43" cy="63" r="4.5" fill="#1C0D33"/><circle cx="77" cy="62" r="8.5" fill="#fff"/><circle cx="77" cy="63" r="4.5" fill="#1C0D33"/><circle cx="45" cy="60" r="1.6" fill="#fff"/><circle cx="79" cy="60" r="1.6" fill="#fff"/>`
+  const G = '#FFC21A', INK = '#1C0D33', LINE = '#7C8599';
+  const faces = {
+    happy: `<path d="M46 60 q9 -12 18 0" stroke="${G}" stroke-width="5.5" fill="none" stroke-linecap="round"/><path d="M76 60 q9 -12 18 0" stroke="${G}" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+      <path d="M63 70 q7 7 14 0" stroke="${G}" stroke-width="4" fill="none" stroke-linecap="round"/>`,
+    normal: `<g class="k-eye"><ellipse cx="55" cy="58" rx="8.5" ry="10" fill="#fff"/><circle cx="57" cy="60" r="5" fill="${INK}"/><circle cx="59.5" cy="56.5" r="2" fill="#fff"/></g>
+      <g class="k-eye"><ellipse cx="85" cy="58" rx="8.5" ry="10" fill="#fff"/><circle cx="87" cy="60" r="5" fill="${INK}"/><circle cx="89.5" cy="56.5" r="2" fill="#fff"/></g>
+      <path d="M65 72 q5 4 10 0" stroke="${G}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`,
+    wow: `<circle cx="55" cy="58" r="10" fill="#fff"/><circle cx="55" cy="59" r="5.5" fill="${INK}"/><circle cx="57.5" cy="55.5" r="2.2" fill="#fff"/>
+      <circle cx="85" cy="58" r="10" fill="#fff"/><circle cx="85" cy="59" r="5.5" fill="${INK}"/><circle cx="87.5" cy="55.5" r="2.2" fill="#fff"/>
+      <ellipse cx="70" cy="73" rx="4" ry="4.5" fill="${G}"/>`,
+    sad: `<path d="M45 54 l13 -5" stroke="${G}" stroke-width="4" stroke-linecap="round"/><path d="M95 54 l-13 -5" stroke="${G}" stroke-width="4" stroke-linecap="round"/>
+      <ellipse cx="55" cy="62" rx="6" ry="7" fill="#fff"/><circle cx="55" cy="64.5" r="3.5" fill="${INK}"/>
+      <ellipse cx="85" cy="62" rx="6" ry="7" fill="#fff"/><circle cx="85" cy="64.5" r="3.5" fill="${INK}"/><path d="M95 66 q-3 5 0 7 q3 -2 0 -7z" fill="#7DD3FC"/>
+      <path d="M64 75 q6 -5 12 0" stroke="${G}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`
   };
-  const m = eyes[mood] ? mood : 'happy';
-  return `<svg class="knight knight-${m} ${cls}" viewBox="0 0 120 140" aria-hidden="true" focusable="false">
-    <path class="k-plume" d="M56 25 C50 11 62 1 80 3 C71 8 73 13 82 16 C72 18 67 21 65 27 Z" fill="#8B4DFF" stroke="#5B22C2" stroke-width="2" stroke-linejoin="round"/>
-    <rect x="42" y="126" width="15" height="10" rx="5" fill="#2B1B47"/><rect x="63" y="126" width="15" height="10" rx="5" fill="#2B1B47"/>
-    <path d="M40 98 h40 v22 a10 10 0 0 1 -10 10 h-20 a10 10 0 0 1 -10 -10z" fill="#6A2BD9" stroke="#4A1A9E" stroke-width="2"/>
-    <path d="M53 106 l7 13 l7 -13" stroke="${G}" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="38" cy="103" r="9" fill="#C9D0DC" stroke="#8E97AB" stroke-width="2"/><circle cx="82" cy="103" r="9" fill="#C9D0DC" stroke="#8E97AB" stroke-width="2"/>
-    <g class="k-sword"><path d="M98 60 l4 -9 l4 9 v38 h-8z" fill="#EEF1F6" stroke="#8E97AB" stroke-width="2" stroke-linejoin="round"/><rect x="91" y="97" width="22" height="6" rx="3" fill="${G}" stroke="#D99A00" stroke-width="1.5"/><rect x="99" y="103" width="6" height="12" rx="2" fill="#4A1A9E"/><circle cx="102" cy="118" r="4" fill="${G}"/><circle cx="102" cy="108" r="6" fill="#C9D0DC" stroke="#8E97AB" stroke-width="2"/></g>
-    <path d="M9 99 h28 v13 c0 10 -7 16 -14 19 c-7 -3 -14 -9 -14 -19z" fill="#6A2BD9" stroke="${G}" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M17 105 l6 10 l6 -10" stroke="${G}" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M20 60 C20 34 38 18 60 18 C82 18 100 34 100 60 V78 C100 92 88 100 74 100 H46 C32 100 20 92 20 78 Z" fill="#DCE1EA" stroke="#8E97AB" stroke-width="2.5"/>
-    <path d="M80 23 C93 31 100 45 100 60 V78 C100 92 88 100 74 100 H70 C84 96 92 86 92 72 V58 C92 43 87 31 80 23Z" fill="#B8C0CF"/>
-    <path d="M33 41 C37 31 45 26 53 24" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".85"/>
-    <rect x="28" y="48" width="64" height="28" rx="13" fill="#1C0D33"/>
-    <ellipse cx="34" cy="72" rx="4" ry="2.4" fill="#FF7AB8" opacity=".9"/><ellipse cx="86" cy="72" rx="4" ry="2.4" fill="#FF7AB8" opacity=".9"/>
-    ${eyes[m]}
-    <path d="M56 22 h8 v59 a4 4 0 0 1 -8 0z" fill="#EEF1F6" stroke="#8E97AB" stroke-width="2"/>
-    <path d="M40 84v7M46 85v7M74 85v7M80 84v7" stroke="#8E97AB" stroke-width="2.5" stroke-linecap="round"/>
+  const m = faces[mood] ? mood : 'happy';
+  return `<svg class="knight knight-${m} ${cls}" viewBox="0 -4 150 162" aria-hidden="true" focusable="false">
+    <ellipse cx="72" cy="153" rx="36" ry="4.5" fill="#000" opacity=".14"/>
+
+    <!-- pernas e botas -->
+    <rect x="56" y="124" width="11" height="22" rx="5" fill="url(#kgMetalD)" stroke="${LINE}" stroke-width="2"/>
+    <rect x="73" y="124" width="11" height="22" rx="5" fill="url(#kgMetalD)" stroke="${LINE}" stroke-width="2"/>
+    <path d="M51 150 q0 -9 9 -9 h4 q5 0 5 5 v4 z" fill="#3A2160" stroke="#24123F" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M89 150 q0 -9 -9 -9 h-4 q-5 0 -5 5 v4 z" fill="#3A2160" stroke="#24123F" stroke-width="2" stroke-linejoin="round"/>
+
+    <!-- corpo: cota de malha + túnica roxa -->
+    <rect x="48" y="96" width="44" height="36" rx="15" fill="url(#kgMetalD)" stroke="${LINE}" stroke-width="2"/>
+    <path d="M52 98 H88 V124 L70 134 L52 124 Z" fill="url(#kgPurple)" stroke="#45168F" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M62 102 L70 113 L78 102" stroke="url(#kgGold)" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="49" y="119" width="42" height="6" rx="3" fill="#3A2160"/>
+    <circle cx="58" cy="122" r="1.8" fill="#FFC21A"/><circle cx="82" cy="122" r="1.8" fill="#FFC21A"/>
+
+    <!-- braço e espada -->
+    <path d="M93 104 Q101 110 106 119" stroke="${LINE}" stroke-width="13" stroke-linecap="round" fill="none"/>
+    <path d="M93 104 Q101 110 106 119" stroke="url(#kgMetalD)" stroke-width="9" stroke-linecap="round" fill="none"/>
+    <g class="k-sword" transform="translate(107 121) rotate(28)">
+      <path d="M-4.5 -12 V-60 L0 -69 L4.5 -60 V-12 Z" fill="url(#kgBlade)" stroke="${LINE}" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M0 -16 V-58" stroke="#fff" stroke-width="1.2" opacity=".7"/>
+      <rect x="-13" y="-13" width="26" height="6" rx="3" fill="url(#kgGold)" stroke="#B07A00" stroke-width="1.5"/>
+      <rect x="-3" y="-7" width="6" height="13" rx="2" fill="#3A2160"/>
+      <circle cx="0" cy="9" r="4" fill="url(#kgGold)" stroke="#B07A00" stroke-width="1.2"/>
+      <circle cx="0" cy="0" r="7.5" fill="url(#kgMetal)" stroke="${LINE}" stroke-width="2"/>
+    </g>
+
+    <!-- ombreiras -->
+    <path d="M34 108 a13 11 0 0 1 26 -6 l-2 8 z" fill="url(#kgMetal)" stroke="${LINE}" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M106 108 a13 11 0 0 0 -26 -6 l2 8 z" fill="url(#kgMetal)" stroke="${LINE}" stroke-width="2" stroke-linejoin="round"/>
+
+    <!-- escudo -->
+    <g class="k-shield">
+      <path d="M21 103 H57 V117 C57 132 48 140 39 145 C30 140 21 132 21 117 Z" fill="url(#kgPurple)" stroke="url(#kgGold)" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M29 111 L39 127 L49 111" stroke="url(#kgGold)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M26 108 H34" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".45"/>
+    </g>
+
+    <!-- pluma (atrás do elmo) -->
+    <g class="k-plume">
+      <path d="M66 22 C60 6 76 -3 94 1 C110 5 120 18 118 34 C113 26 105 21 96 23 C106 27 111 36 107 45 C100 35 90 30 79 28 C73 27 69 25 66 22 Z" fill="url(#kgPlume)" stroke="#45168F" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M72 14 C83 6 99 8 109 19" stroke="#D9C2FF" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".85"/>
+      <path d="M80 23 C90 22 99 26 104 33" stroke="#D9C2FF" stroke-width="2" fill="none" stroke-linecap="round" opacity=".6"/>
+    </g>
+
+    <!-- elmo -->
+    <path d="M70 15 C99 15 115 36 115 62 V77 C115 92 103 102 88 102 H52 C37 102 25 92 25 77 V62 C25 36 41 15 70 15 Z" fill="url(#kgMetal)" stroke="${LINE}" stroke-width="2.5"/>
+    <path d="M113 60 V77 C113 91 102 100 88 100 H80 C96 98 106 88 106 74 V60 C106 44 100 30 90 22 C104 29 113 43 113 60 Z" fill="#A3ACBF" opacity=".45"/>
+    <path d="M65 16.5 Q70 13 75 16.5 V36 Q70 39 65 36 Z" fill="url(#kgGold)" stroke="#B07A00" stroke-width="1.5"/>
+    <path d="M30 48 Q70 26 110 48" stroke="url(#kgGold)" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M38 38 Q46 25 58 21" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".9"/>
+    <circle cx="35" cy="47" r="2.2" fill="#fff" opacity=".9"/>
+    <!-- viseira -->
+    <path d="M34 54 C34 48 39 45 45 45 H95 C101 45 106 48 106 54 V65 C106 75 98 81 88 81 H52 C42 81 34 75 34 65 Z" fill="url(#kgVisor)" stroke="#5E667A" stroke-width="2"/>
+    <path d="M40 50 H100" stroke="#000" stroke-width="3" stroke-linecap="round" opacity=".25"/>
+    <ellipse cx="44" cy="72" rx="5.5" ry="3.2" fill="#FF7AB8" opacity=".85"/>
+    <ellipse cx="96" cy="72" rx="5.5" ry="3.2" fill="#FF7AB8" opacity=".85"/>
+    ${faces[m]}
+    <!-- respiros e rebites -->
+    <path d="M60 87 v6 M66 88 v6 M74 88 v6 M80 87 v6" stroke="${LINE}" stroke-width="2.6" stroke-linecap="round"/>
+    <circle cx="31" cy="72" r="2.3" fill="#9AA3B6"/><circle cx="109" cy="72" r="2.3" fill="#9AA3B6"/>
   </svg>`;
 }
+if (document.body && !document.querySelector('.knight-defs')) document.body.insertAdjacentHTML('afterbegin', KNIGHT_DEFS);
 
 /* Cavaleiro no tabuleiro: sempre de frente, com uma seta dourada que gira e mostra a direção */
 function boardKnightHTML() {
