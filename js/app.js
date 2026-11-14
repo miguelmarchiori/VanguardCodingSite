@@ -646,7 +646,7 @@ function renderStep() {
       <span class="badge-new badge-type">Digite o código</span>
       <h2 class="q">${s.q}</h2>
       ${s.code ? codeBlock(s.code, lang) : ''}
-      <div class="type-wrap">${langBadge(lang, 'mini')}<input class="type-in" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" placeholder="${esc(s.ph || 'Digite aqui...')}" aria-label="Sua resposta"></div>
+      <div class="type-wrap">${langBadge(lang, 'sm')}<input class="type-in" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" placeholder="${esc(s.ph || 'Digite aqui...')}" aria-label="Sua resposta"></div>
       <p class="type-hint">Aperte <kbd>Enter</kbd> para verificar. Espaços extras não tem problema.</p>
     </div>`;
     setMain('Verificar', false);

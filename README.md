@@ -36,7 +36,7 @@ Pronto: aparece o botão **Entrar com Google** e a página **Ranking** passa a f
 ```
 index.html            página única (início, trilhas, arena, ranking)
 css/style.css         visual
-img/                  logo da Vanguard e favicon
+img/                  logo da Vanguard, favicon e logos do Python e do Java
 js/utils.js           destaque de código, mascote Guardinho, ícones, sons, confete
 js/courses.js         TODO o conteúdo das lições  ← edite aqui!
 js/arena.js           missões da Arena + mini-interpretador Python/Java
@@ -63,4 +63,4 @@ Para missões novas da Arena, edite `ARENA_LEVELS` em `js/arena.js` (`#` pedra, 
 **Dica para apresentações:** no perfil existe o *Modo mentor*, que libera todas as lições.
 
 ---
-LEGO® e SPIKE™ são marcas do LEGO Group. FIRST® e FIRST® Tech Challenge são marcas da FIRST®. Projeto educacional da equipe, sem vínculo oficial.
+LEGO® e SPIKE™ são marcas do LEGO Group. FIRST® e FIRST® Tech Challenge são marcas da FIRST®. “Python” e o logo do Python são marcas da Python Software Foundation; Java e o logo do Java são marcas da Oracle. Os arquivos SVG dos logos vêm do projeto [devicon](https://github.com/devicons/devicon) (licença MIT). Projeto educacional da equipe, sem vínculo oficial.

@@ -119,7 +119,7 @@ function icon(name, cls = '') {
   return `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICONS[name] || ''}</svg>`;
 }
 function langBadge(lang, cls = '') {
-  return `<span class="lang-badge ${lang} ${cls}">${lang === 'java' ? 'Java' : 'Py'}</span>`;
+  return `<span class="lang-badge ${lang} ${cls}"><img src="img/${lang === 'java' ? 'java' : 'python'}.svg" alt="" width="64" height="64"></span>`;
 }
 
 /* ---------- Guardinho, o cavaleiro mascote (SVG original) ---------- */
