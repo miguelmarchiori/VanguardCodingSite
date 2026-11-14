@@ -11,7 +11,9 @@ Funciona como um app de idiomas: lições curtinhas, vidas, XP, ofensiva, meta d
 
 ## Como rodar
 
-É só HTML, CSS e JS puro, sem build. Abra o `index.html` no navegador ou publique no **GitHub Pages** (Settings → Pages → branch `main`, pasta raiz).
+É só HTML, CSS e JS puro, sem build. O site está publicado na **Vercel** (https://vancode-khaki.vercel.app), que atualiza sozinha a cada commit na branch `main`. Para testar no computador, abra o `index.html` no navegador (o login com Google só funciona no site publicado).
+
+Se o endereço do site mudar, atualize as linhas de prévia (`og:url`, `og:image` e `canonical`) no começo do `index.html` e adicione o novo domínio no Firebase (passo 3 abaixo).
 
 ## Ligar o login com Google e o ranking (uns 10 minutos)
 
@@ -19,7 +21,7 @@ O site já funciona sem isso. Para ligar as contas:
 
 1. Entre em <https://console.firebase.google.com> com a conta da equipe e clique em **Criar projeto** (pode desativar o Google Analytics).
 2. **Authentication** → *Vamos começar* → aba **Sign-in method** → ative **Google** → escolha o e-mail de suporte → Salvar.
-3. Ainda em Authentication → aba **Settings** → **Domínios autorizados** → *Adicionar domínio* → `miguelmarchiori.github.io`.
+3. Ainda em Authentication → aba **Settings** → **Domínios autorizados** → *Adicionar domínio* → o domínio do site (hoje `vancode-khaki.vercel.app`).
 4. **Firestore Database** → *Criar banco de dados* → local `southamerica-east1 (São Paulo)` → modo de produção.
 5. Na aba **Regras** do Firestore, apague tudo, cole o conteúdo do arquivo [`firestore.rules`](firestore.rules) e clique em **Publicar**.
 6. ⚙ **Configurações do projeto** → em *Seus apps* clique no ícone **Web** (`</>`) → dê um nome (ex.: VanCode) → *Registrar app*. Vai aparecer um bloco `firebaseConfig`.

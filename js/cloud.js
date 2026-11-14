@@ -18,6 +18,8 @@ const Cloud = {
   synced: null,     // data da última sincronização
   A: null, F: null, auth: null, db: null,
   _timer: null,
+  deleting: false,  // apagando a conta: não salva mais nada
+  deleted: false,
 
   configured() {
     const c = window.VANCODE_FIREBASE;
@@ -111,13 +113,13 @@ const Cloud = {
 
   /* chamado a cada save(): espera um pouco e envia tudo de uma vez */
   schedule() {
-    if (!this.user || this.busy) return;
+    if (!this.user || this.busy || this.deleting) return;
     clearTimeout(this._timer);
     this._timer = setTimeout(() => this.push(), 2500);
   },
 
   async push() {
-    if (!this.user || !this.enabled) return;
+    if (!this.user || !this.enabled || this.deleting) return;
     const F = this.F, uid = this.user.uid;
     try {
       await F.setDoc(F.doc(this.db, 'progress', uid), {
@@ -129,6 +131,38 @@ const Cloud = {
     } catch (e) {
       console.warn('[VanCode] erro ao salvar na nuvem:', e);
     }
+  },
+
+  /* apaga o progresso, o cartão do ranking e o login da pessoa */
+  async deleteAccount() {
+    if (!this.user || !this.enabled) return false;
+    clearTimeout(this._timer);
+    this.deleting = true;
+    const F = this.F, A = this.A, user = this.user, uid = user.uid;
+    try {
+      await F.deleteDoc(F.doc(this.db, 'players', uid));
+      await F.deleteDoc(F.doc(this.db, 'progress', uid));
+    } catch (e) {
+      console.warn('[VanCode] erro ao apagar dados:', e);
+      this.deleting = false;
+      toast('Não consegui apagar seus dados agora. Tente de novo.', 'err');
+      return false;
+    }
+    this.deleted = true;
+    try {
+      try { await A.deleteUser(user); }
+      catch (e) {
+        if (e.code !== 'auth/requires-recent-login') throw e;
+        await A.reauthenticateWithPopup(user, new A.GoogleAuthProvider());
+        await A.deleteUser(user);
+      }
+    } catch (e) {
+      console.warn('[VanCode] login não foi apagado:', e);
+      toast('Seus dados foram apagados. Para remover também o login, entre de novo e repita.', 'err');
+      await A.signOut(this.auth);
+    }
+    this.deleting = false;
+    return true;
   },
 
   async top(n = 50) {

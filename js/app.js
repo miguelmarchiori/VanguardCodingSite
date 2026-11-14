@@ -50,6 +50,23 @@ const cleanName = (n) => String(n || '').replace(/[<>]/g, '').replace(/\s+/g, ' 
 const firstName = (n) => cleanName(String(n || '').split(' ')[0]);
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
+/* ---------- Apelidos: filtro básico de palavrões e ofensas ----------
+   É uma barreira simples do lado do navegador; a moderação final é
+   feita pela equipe no console do Firebase (Firestore → players). */
+const NICK_RAIZES = ['porra', 'caralh', 'merda', 'merdinh', 'viadinh', 'bostinh', 'buceta', 'boceta', 'putaria', 'putinha', 'fodase', 'foder', 'fodido', 'arromba', 'cuzao', 'cuzinho',
+  'vagabund', 'vadia', 'cacete', 'punheta', 'siririca', 'xoxota', 'xereca', 'bosta', 'viado', 'sapatao', 'traveco', 'retardad', 'mongoloide',
+  'fuck', 'shit', 'bitch', 'cunt', 'nigg', 'porn', 'nazi', 'hitler', 'penis', 'vagina'];
+const NICK_PALAVRAS = ['cu', 'puta', 'puto', 'foda', 'fdp', 'vsf', 'tnc', 'pqp', 'krl', 'bct', 'bicha', 'corno', 'dick', 'fag', 'sex'];
+const squashLetters = (s) => s.replace(/(.)\1+/g, '$1');
+function nickProibido(n) {
+  const base = String(n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[0]/g, 'o').replace(/[@4]/g, 'a').replace(/[1!]/g, 'i').replace(/3/g, 'e').replace(/[5$]/g, 's').replace(/7/g, 't');
+  const compacto = squashLetters(base.replace(/[^a-z]/g, ''));
+  const palavras = base.split(/[^a-z]+/).filter(Boolean).map(squashLetters);
+  return NICK_RAIZES.some((r) => compacto.includes(squashLetters(r))) || palavras.some((p) => NICK_PALAVRAS.includes(p));
+}
+const safeName = (n) => (nickProibido(n) ? 'Cavaleiro' : (cleanName(n) || 'Cavaleiro'));
+
 function addXP(n) {
   const t = dayStr();
   S.xp += n;
@@ -141,7 +158,7 @@ function afterReward() {
 
 /* ---------- Conta (Google) ---------- */
 function publicProfile() {
-  return { name: cleanName(S.name) || 'Cavaleiro', xp: S.xp | 0, lessons: countDone(), arena: arenaCount(), streak: currentStreak() };
+  return { name: safeName(S.name), xp: S.xp | 0, lessons: countDone(), arena: arenaCount(), streak: currentStreak() };
 }
 
 function mergeStates(a, b) {
@@ -190,7 +207,7 @@ async function adoptCloudState(u, remote) {
     if (!keep) S = freshState();
   }
   S.uid = u.uid;
-  if (!cleanName(S.name)) S.name = firstName(u.displayName) || 'Cavaleiro';
+  if (!cleanName(S.name) || nickProibido(S.name)) S.name = safeName(firstName(u.displayName));
   saveLocal();
   route();
   if (isNew) welcomeModal();
@@ -204,11 +221,16 @@ function welcomeModal() {
     <h3>Conta criada!</h3>
     <p>Agora seu progresso fica salvo na nuvem e você aparece no <b>ranking</b>. Como quer ser chamado(a) lá?</p>
     <input class="text-in" id="wName" maxlength="20" value="${esc(S.name)}" aria-label="Apelido no ranking">
-    <small class="muted">Dica: use um apelido. Não precisa ser seu nome completo.</small>
+    <small class="muted" id="wHint">Dica: use um apelido. Não precisa ser seu nome completo.</small>
     <div class="modal-btns"><button class="btn btn-brand" id="wSave">Salvar e continuar</button></div>
+    <p class="legal-note">Ao usar a conta, você concorda com a <a href="#/privacidade" data-close>política de privacidade</a>. Menores de 13 anos precisam da autorização de um responsável.</p>
   </div>`);
   $('#wSave').onclick = () => {
     const n = cleanName($('#wName').value);
+    if (n && nickProibido(n)) {
+      $('#wHint').innerHTML = '<b class="nick-err">Esse apelido não pode. Escolha outro, sem palavrões nem ofensas.</b>';
+      return;
+    }
     if (n) S.name = n;
     save();
     closeModal();
@@ -220,7 +242,23 @@ function onSignedOut() {
   S = freshState();
   saveLocal();
   route();
-  toast('Você saiu da conta. Até a próxima!');
+  if (Cloud.deleted) { Cloud.deleted = false; toast('Sua conta e seus dados foram apagados.'); }
+  else toast('Você saiu da conta. Até a próxima!');
+}
+
+function askDeleteAccount() {
+  openModal(`<div class="center-modal">
+    ${knightSVG('sad', 'knight-md')}
+    <h3>Apagar sua conta?</h3>
+    <p>Isso apaga para sempre seu progresso salvo na nuvem, seu lugar no ranking e o seu login na VanCode. Não dá para desfazer.</p>
+    <div class="modal-btns"><button class="btn btn-red" id="delYes">Apagar minha conta</button><button class="btn btn-white" data-close>Cancelar</button></div>
+  </div>`);
+  $('#delYes').onclick = async () => {
+    $('#delYes').disabled = true;
+    $('#delYes').textContent = 'Apagando...';
+    await Cloud.deleteAccount();
+    closeModal();
+  };
 }
 
 function onCloudChange() {
@@ -269,6 +307,10 @@ function route() {
     Arena.show();
     nav('arena');
     document.title = 'Arena · VanCode';
+    window.scrollTo(0, 0);
+  } else if (page === 'privacidade') {
+    $('#view-privacy').hidden = false;
+    document.title = 'Privacidade · VanCode';
     window.scrollTo(0, 0);
   } else if (page === 'ranking') {
     $('#view-ranking').hidden = false;
@@ -460,6 +502,8 @@ function showPath(cid) {
 
   let units = '';
   C.units.forEach((u, ui) => {
+    const firstIdx = gi;
+    const canSkip = ui > 0 && !isUnlocked(cid, firstIdx);
     let nodes = '';
     u.lessons.forEach((l) => {
       const i = gi++;
@@ -475,7 +519,10 @@ function showPath(cid) {
     units += `<section class="unit" style="--uc:${u.color}">
       <div class="unit-banner">
         <div><small>Unidade ${ui + 1}</small><h2>${u.name}</h2><p>${u.desc}</p></div>
-        <button class="guide-btn" data-guide="${ui}" title="Resumo dos conceitos desta unidade">${icon('book')}<span>Guia</span></button>
+        <div class="unit-actions">
+          ${canSkip ? `<button class="guide-btn skip-btn" data-skip="${cid}:${ui}" title="Faça um teste e pule para esta unidade">${icon('forward')}<span>Pular para cá</span></button>` : ''}
+          <button class="guide-btn" data-guide="${ui}" title="Resumo dos conceitos desta unidade">${icon('book')}<span>Guia</span></button>
+        </div>
       </div>
       <div class="nodes">${nodes}
         <div class="unit-knight ${ui % 2 ? 'left' : 'right'}" aria-hidden="true">${knightSVG(['happy', 'normal', 'wow'][ui % 3])}</div>
@@ -569,22 +616,23 @@ const PRAISE = ['Mandou bem!', 'Isso aí!', 'Incrível!', 'Código perfeito!', '
 const OOPS = ['Quase lá!', 'Opa, não foi dessa vez!', 'Errar faz parte!', 'Hmm, quase!'];
 const LS = {};
 
-function startLesson(cid, i) {
+function startLesson(cid, i, quiz = null) {
   closePop();
   closeModal();
-  const lesson = FLAT[cid][i];
+  const lesson = quiz ? quiz.lesson : FLAT[cid][i];
+  const hearts = quiz ? 3 : 5;
   Object.assign(LS, {
-    cid, i, lesson, lang: COURSES[cid].lang,
+    cid, i, lesson, quiz, lang: COURSES[cid].lang,
     queue: lesson.steps.map((s, k) => Object.assign({ k }, s)),
-    pos: 0, hearts: 5, mistakes: 0, solved: 0, total: lesson.steps.length,
-    t0: Date.now(), review: isDone(cid, i), mode: 'answer', ok: false, answer: null
+    pos: 0, hearts, mistakes: 0, solved: 0, total: lesson.steps.length,
+    t0: Date.now(), review: quiz ? false : isDone(cid, i), mode: 'answer', ok: false, answer: null
   });
   const el = $('#lesson');
   el.innerHTML = `
     <div class="ls-top">
       <button class="ls-close" aria-label="Sair da lição">${icon('x')}</button>
       <div class="ls-bar" role="progressbar" aria-label="Progresso da lição"><div class="ls-fill"></div></div>
-      <div class="ls-hearts" title="Vidas">${icon('heart')}<span>5</span></div>
+      <div class="ls-hearts" title="Vidas">${icon('heart')}<span>${hearts}</span></div>
     </div>
     <div class="ls-body"><div class="ls-inner"></div></div>
     <div class="ls-foot"><div class="ls-foot-in"><div class="ls-fb" aria-live="polite"></div><button class="btn btn-green btn-lg ls-main" disabled>Verificar</button></div></div>`;
@@ -750,18 +798,18 @@ function mainAction() {
   if (LS.mode === 'teach') { LS.solved++; return advance(); }
   if (LS.mode === 'answer') return checkAnswer();
   if (LS.mode === 'feedback') {
-    if (!LS.ok) LS.queue.push(LS.cur);
-    else LS.solved++;
+    if (LS.ok || LS.quiz) LS.solved++;          // no teste, pergunta errada não volta
+    else LS.queue.push(LS.cur);
     if (LS.hearts <= 0) return failLesson();
     return advance();
   }
   if (LS.mode === 'result') return closeLesson();
-  if (LS.mode === 'failed') return startLesson(LS.cid, LS.i);
+  if (LS.mode === 'failed') return LS.quiz ? startSkipTest(LS.cid, LS.quiz.unit) : startLesson(LS.cid, LS.i);
 }
 
 function advance() {
   LS.pos++;
-  if (LS.pos >= LS.queue.length) return finishLesson();
+  if (LS.pos >= LS.queue.length) return LS.quiz ? finishSkipTest() : finishLesson();
   renderStep();
 }
 
@@ -815,7 +863,7 @@ function checkAnswer() {
       ${extra ? `<div class="fb-why">${extra}</div>` : ''}
       <div class="fb-right"><small>Resposta certa:</small>${rightIsCode ? `<pre class="code mini">${highlight(right, LS.lang)}</pre>` : `<b>${esc(right)}</b>`}</div>
       ${s.why ? `<div class="fb-why">${s.why}</div>` : ''}
-      ${LS.hearts > 0 ? '<div class="fb-small">Essa pergunta volta no final para você tentar de novo.</div>' : ''}`;
+      ${LS.hearts > 0 ? `<div class="fb-small">${LS.quiz ? `No teste, cada erro custa uma vida. Restam ${LS.hearts}.` : 'Essa pergunta volta no final para você tentar de novo.'}</div>` : ''}`;
     setMain(LS.hearts > 0 ? 'Entendi' : 'Ver resultado', true, 'btn-red');
     Sound.play('bad');
     const h = $('.ls-hearts');
@@ -874,7 +922,13 @@ function finishLesson() {
 
 function failLesson() {
   LS.mode = 'failed';
-  $('.ls-inner').innerHTML = `<div class="result fail">
+  $('.ls-inner').innerHTML = LS.quiz
+    ? `<div class="result fail">
+    <div class="res-knight">${knightSVG('sad', 'knight-lg')}</div>
+    <h1>Não foi dessa vez</h1>
+    <p class="res-sub">Sem problema! Você pode fazer as lições das unidades anteriores, ou tentar o teste de novo com outras perguntas.</p>
+  </div>`
+    : `<div class="result fail">
     <div class="res-knight">${knightSVG('sad', 'knight-lg')}</div>
     <h1>Acabaram as vidas</h1>
     <p class="res-sub">Tudo bem! Até programadores profissionais erram todo dia. O segredo é tentar de novo, e agora você já sabe mais do que antes.</p>
@@ -884,6 +938,63 @@ function failLesson() {
   $('#failExit').onclick = closeLesson;
   setMain('Tentar de novo', true);
   Sound.play('fail');
+}
+
+/* ---------- Teste para pular unidades ---------- */
+const SKIP_QUESTIONS = 12;
+function buildSkipTest(cid, ui) {
+  const prev = COURSES[cid].units.slice(0, ui);
+  const per = Math.max(2, Math.ceil(SKIP_QUESTIONS / prev.length));
+  let pool = [];
+  prev.forEach((u) => {
+    const exercises = u.lessons.flatMap((l) => l.steps.filter((s) => s.t === 'choice' || s.t === 'fill' || s.t === 'order'));
+    pool = pool.concat(shuffle(exercises).slice(0, per));
+  });
+  return { title: `Teste: pular para a Unidade ${ui + 1}`, steps: shuffle(pool).slice(0, SKIP_QUESTIONS) };
+}
+function confirmSkip(cid, ui) {
+  const u = COURSES[cid].units[ui];
+  openModal(`<div class="center-modal">
+    ${knightSVG('wow', 'knight-md')}
+    <h3>Pular para a Unidade ${ui + 1}?</h3>
+    <p>Já sabe o conteúdo das unidades 1 a ${ui}? Faça um teste de <b>${SKIP_QUESTIONS} perguntas</b> com <b>3 vidas</b>. Se passar, todas as lições antes de <b>${esc(u.name)}</b> ficam concluídas.</p>
+    <div class="modal-btns"><button class="btn btn-brand" id="skipGo">${icon('forward')}Começar o teste</button><button class="btn btn-white" data-close>Agora não</button></div>
+  </div>`);
+  $('#skipGo').onclick = () => startSkipTest(cid, ui);
+}
+function startSkipTest(cid, ui) {
+  startLesson(cid, 0, { unit: ui, lesson: buildSkipTest(cid, ui) });
+}
+function finishSkipTest() {
+  LS.mode = 'result';
+  const { cid } = LS;
+  const ui = LS.quiz.unit;
+  let liberadas = 0;
+  FLAT[cid].forEach((l, i) => {
+    if (l.unit < ui && !isDone(cid, i)) { S.done[lessonKey(cid, i)] = 'teste'; liberadas++; }
+  });
+  const xp = liberadas ? 20 : 5;
+  addXP(xp);
+  const newAch = checkAchievements();
+  const secs = Math.max(1, Math.round((Date.now() - LS.t0) / 1000));
+  const acc = Math.round((100 * (LS.total - LS.mistakes)) / LS.total);
+  $('.ls-top').classList.add('hide');
+  $('.ls-inner').innerHTML = `<div class="result">
+    <div class="res-knight">${knightSVG('happy', 'knight-lg')}</div>
+    <h1>Unidade ${ui + 1} liberada!</h1>
+    <p class="res-sub">Você mostrou que já domina o começo da trilha${liberadas ? `: ${plural(liberadas, 'lição foi marcada', 'lições foram marcadas')} como concluída${liberadas > 1 ? 's' : ''}` : ''}. Agora é com <b>${esc(COURSES[cid].units[ui].name)}</b>!</p>
+    <div class="res-cards">
+      <div class="rc rc-xp"><small>XP ganho</small><b>${icon('bolt')}${xp}</b></div>
+      <div class="rc rc-acc"><small>Acertos</small><b>${icon('target')}${acc}%</b></div>
+      <div class="rc rc-time"><small>Tempo</small><b>${icon('clock')}${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}</b></div>
+    </div>
+    ${newAch.length ? `<div class="res-ach"><h3>Nova${newAch.length > 1 ? 's' : ''} conquista${newAch.length > 1 ? 's' : ''}</h3>${newAch.map((a) => achHTML(a, true)).join('')}</div>` : ''}
+  </div>`;
+  $('.ls-foot').className = 'ls-foot';
+  $('.ls-fb').innerHTML = '';
+  setMain('Continuar', true);
+  Sound.play('win');
+  confetti();
 }
 
 /* ---------- Ranking ---------- */
@@ -938,15 +1049,15 @@ function renderRanking() {
       const r = top3[k];
       return `<div class="pod pod-${k + 1} ${u && r.id === u.uid ? 'me' : ''} ${cargoOf(r.id) ? 'staff' : ''}">
         ${k === 0 && !cargoOf(r.id) ? `<span class="pod-crown">${icon('crown')}</span>` : ''}
-        ${avatar(r.name, r.id, 'lg')}
-        <b class="pod-name">${esc(r.name)}</b>
+        ${avatar(safeName(r.name), r.id, 'lg')}
+        <b class="pod-name">${esc(safeName(r.name))}</b>
         ${cargoBadge(r.id)}${leaguePill(r.xp)}
         <div class="pod-base"><span class="pod-n">${k + 1}</span><span class="pod-xp">${r.xp} XP</span></div>
       </div>`;
     }).join('')}</div>`;
     const list = rows.slice(3).map((r, k) => `<li class="rank-row ${u && r.id === u.uid ? 'me' : ''} ${cargoOf(r.id) ? 'staff' : ''}">
-      <span class="rk">${k + 4}</span>${avatar(r.name, r.id)}
-      <span class="rn"><span class="rn-top"><b>${esc(r.name)}</b>${cargoBadge(r.id)}</span><small>${plural(r.lessons || 0, 'lição', 'lições')} · ${plural(r.arena || 0, 'missão', 'missões')}</small></span>
+      <span class="rk">${k + 4}</span>${avatar(safeName(r.name), r.id)}
+      <span class="rn"><span class="rn-top"><b>${esc(safeName(r.name))}</b>${cargoBadge(r.id)}</span><small>${plural(r.lessons || 0, 'lição', 'lições')} · ${plural(r.arena || 0, 'missão', 'missões')}</small></span>
       ${leaguePill(r.xp)}<span class="rx">${r.xp} XP</span>
     </li>`).join('');
     main = podium + (list ? `<ol class="rank-list">${list}</ol>` : '');
@@ -967,6 +1078,7 @@ function renderRanking() {
         <p>Crie sua conta com o Google em um clique. Seu progresso fica salvo e você aparece aqui com um apelido.</p>
         <button class="btn-google lg" data-login>${GOOGLE_G}<span>Entrar com Google</span></button>
         <small class="muted">Você tem ${S.xp} XP neste navegador.</small>
+        <p class="legal-note">Menores de 13 anos: peça para um responsável. <a href="#/privacidade">Privacidade</a></p>
       </div>`;
 
   v.innerHTML = `<div class="rank-page wrap">
@@ -1033,12 +1145,15 @@ function showProfile() {
       <label class="switch"><input type="checkbox" id="pfSound" ${Sound.muted ? '' : 'checked'}><span></span>Sons</label>
       <label class="switch"><input type="checkbox" id="pfMentor" ${S.mentor ? 'checked' : ''}><span></span>Modo mentor <small>libera todas as lições, para professores e apresentações</small></label>
       <button class="btn btn-white btn-sm" id="pfReset">Apagar meu progresso</button>
+      ${u ? '<button class="btn btn-white btn-sm danger" id="pfDelete">Apagar minha conta</button>' : ''}
     </div>
+    <p class="legal-note"><a href="#/privacidade" data-close>Política de privacidade</a></p>
   </div>`, 'modal-wide');
 
   $('#pfName').addEventListener('change', (e) => {
     const n = cleanName(e.target.value);
     if (u && !n) { e.target.value = S.name; return; }
+    if (nickProibido(n)) { e.target.value = S.name; toast('Esse apelido não pode. Escolha outro, sem palavrões nem ofensas.', 'err'); return; }
     S.name = n;
     save();
     renderAccount();
@@ -1047,6 +1162,8 @@ function showProfile() {
   $('#pfMentor').addEventListener('change', (e) => { S.mentor = e.target.checked; save(); route(); });
   const lo = $('#pfLogout');
   if (lo) lo.addEventListener('click', () => { closeModal(); Cloud.signOut(); });
+  const del = $('#pfDelete');
+  if (del) del.addEventListener('click', askDeleteAccount);
   $('#pfReset').addEventListener('click', () => {
     if (!confirm('Tem certeza? Isso apaga XP, lições e conquistas.')) return;
     const keep = { uid: S.uid, name: S.name };
@@ -1076,6 +1193,8 @@ function initEvents() {
     if (t.closest('[data-rank-reload]')) { showRanking(true); return; }
     const node = t.closest('.node');
     if (node) { showPop(node); return; }
+    const skip = t.closest('[data-skip]');
+    if (skip) { const [cid, ui] = skip.dataset.skip.split(':'); confirmSkip(cid, +ui); return; }
     const guide = t.closest('[data-guide]');
     if (guide) { showGuide(currentPathCid, +guide.dataset.guide); return; }
     if (t.closest('[data-close]')) { closeModal(); return; }

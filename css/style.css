@@ -97,6 +97,10 @@ pre.code.mini { font-size: 13px; padding: 10px 12px; margin: 6px 0 0; box-shadow
 .btn-google .g-logo { width: 18px; height: 18px; }
 .btn-google.lg { padding: 12px 18px; font-size: 15.5px; border-radius: 14px; box-shadow: 0 4px 0 rgba(0, 0, 0, .18); border-color: transparent; }
 .btn-google.lg .g-logo { width: 20px; height: 20px; }
+.legal-note { margin: 12px 0 0; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.legal-note a { color: var(--brand); }
+.nick-err { color: var(--red-t); }
+.btn.danger { --t: var(--red-t); }
 .link-btn { border: 0; background: none; padding: 0; color: var(--brand); font-weight: 900; text-decoration: underline; cursor: pointer; }
 .text-in { width: 100%; padding: 12px 14px; border: 2px solid var(--line); border-radius: 14px; font: 800 17px var(--font); color: var(--ink); outline: none; background: #fff; }
 .text-in:focus { border-color: var(--brand-2); }
@@ -375,6 +379,10 @@ pre.code.mini { font-size: 13px; padding: 10px 12px; margin: 6px 0 0; box-shadow
 .unit-banner p { margin: 0; opacity: .92; font-size: 15px; }
 .guide-btn { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; border: 2px solid rgba(255, 255, 255, .5); background: rgba(255, 255, 255, .15); color: #fff; border-radius: 14px; padding: 10px 14px; font-weight: 900; cursor: pointer; }
 .guide-btn:hover { background: rgba(255, 255, 255, .28); }
+.unit-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.skip-btn { background: #fff; color: var(--uc); border-color: #fff; box-shadow: 0 3px 0 rgba(0, 0, 0, .18); }
+.skip-btn:hover { background: #F4F1FB; }
+.guide-btn .ic { width: 18px; height: 18px; }
 .nodes { position: relative; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 36px 0 20px; }
 .node-row { position: relative; display: flex; flex-direction: column; align-items: center; transform: translateX(calc(var(--off) * 58px)); }
 .node {
@@ -590,6 +598,16 @@ pre.code.mini { font-size: 13px; padding: 10px 12px; margin: 6px 0 0; box-shadow
 .toast small { display: block; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
 #confetti { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 400; pointer-events: none; display: none; }
 
+/* ---------- Privacidade ---------- */
+.privacy { max-width: 760px; padding-top: 34px; padding-bottom: 10px; }
+.privacy h1 { font-size: clamp(32px, 4.6vw, 44px); margin: 4px 0 10px; }
+.privacy h2 { font-size: 23px; margin: 30px 0 8px; }
+.privacy p, .privacy li { color: #3F375C; font-size: 17px; }
+.privacy ul { padding-left: 22px; margin: 0 0 .8em; }
+.privacy li { margin-bottom: 6px; }
+.privacy-lead { font-size: 19px !important; font-weight: 700; color: var(--muted) !important; }
+.privacy-date { margin-top: 30px; color: var(--muted) !important; font-size: 14px !important; font-weight: 700; }
+
 /* ---------- Ranking ---------- */
 .rank-page { padding-top: 30px; }
 .rank-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
@@ -798,7 +816,9 @@ pre.code.mini { font-size: 13px; padding: 10px 12px; margin: 6px 0 0; box-shadow
   .path-side { grid-template-columns: 1fr; }
   .unit-banner { padding: 14px 16px; }
   .unit-banner h2 { font-size: 22px; }
-  .guide-btn span { display: none; }
+  .guide-btn:not(.skip-btn) span { display: none; }
+  .unit-banner { flex-wrap: wrap; }
+  .skip-btn span { font-size: 13px; }
   .ls-top { padding: 12px 14px; gap: 10px; }
   .ls-inner { padding: 6px 16px 30px; }
   .ls-foot-in { flex-direction: column; align-items: stretch; padding: 14px 16px; gap: 12px; }
