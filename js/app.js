@@ -611,7 +611,10 @@ function showPath(cid) {
   else window.scrollTo(0, 0);
 }
 
-function closePop() { $$('.pop').forEach((p) => p.remove()); }
+function closePop() {
+  $$('.pop').forEach((p) => p.remove());
+  $$('.node-row.has-pop').forEach((r) => r.classList.remove('has-pop'));
+}
 function showPop(node) {
   const already = node.parentElement.querySelector('.pop');
   closePop();
@@ -628,6 +631,7 @@ function showPop(node) {
     : `<b>${esc(l.title)}</b><small>Lição ${i + 1} de ${totalLessons(cid)} · ${nEx} exercícios${l.last ? ' · desafio' : ''}</small>
        <button class="btn ${st === 'done' ? 'btn-white' : 'btn-green'}" data-start="${cid}:${i}">${st === 'done' ? 'Revisar · +5 XP' : 'Começar · +15 XP'}</button>`;
   node.parentElement.appendChild(pop);
+  node.parentElement.classList.add('has-pop');   // o balão fica por cima das próximas lições
   Sound.play('tap');
 }
 

@@ -385,6 +385,7 @@ pre.code.mini { font-size: 13px; padding: 10px 12px; margin: 6px 0 0; box-shadow
 .guide-btn .ic { width: 18px; height: 18px; }
 .nodes { position: relative; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 36px 0 20px; }
 .node-row { position: relative; display: flex; flex-direction: column; align-items: center; transform: translateX(calc(var(--off) * 58px)); }
+.node-row.has-pop { z-index: 30; }
 .node {
   position: relative; display: grid; place-items: center; width: 80px; height: 74px; border-radius: 50%; border: 0; cursor: pointer; color: #fff;
   background: var(--uc); box-shadow: 0 8px 0 var(--ucd); transition: transform .1s, box-shadow .1s; -webkit-tap-highlight-color: transparent;
