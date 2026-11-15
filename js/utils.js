@@ -334,7 +334,7 @@ function toast(html, kind = '') {
   if (!box) return;
   const el = document.createElement('div');
   el.className = 'toast ' + kind;
-  el.innerHTML = html;
+  el.innerHTML = /^\s*</.test(html) ? html : `<span>${html}</span>`;
   box.appendChild(el);
   setTimeout(() => el.classList.add('out'), 3400);
   setTimeout(() => el.remove(), 3900);

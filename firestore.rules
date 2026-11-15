@@ -25,6 +25,21 @@ service cloud.firestore {
       allow read, write: if isOwner(uid);
     }
 
+    // Ranking semanal: semanas/{2026-S46}/jogadores/{uid}. Zera sozinho porque cada semana é uma pasta nova.
+    function validWeek() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['name', 'xp', 'updatedAt'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 20
+        && d.xp is int && d.xp >= 0 && d.xp <= 20000
+        && d.updatedAt == request.time;
+    }
+    match /semanas/{semana}/jogadores/{uid} {
+      allow read: if true;
+      allow create: if isOwner(uid) && validWeek() && request.resource.data.xp <= 2000;
+      allow update: if isOwner(uid) && validWeek() && request.resource.data.xp <= resource.data.xp + 600;
+      allow delete: if isOwner(uid);
+    }
+
     // Ranking: todo mundo pode ver; cada aluno só mexe no próprio cartão.
     // O limite de XP por gravação dificulta "trapaças" pelo console do navegador.
     match /players/{uid} {

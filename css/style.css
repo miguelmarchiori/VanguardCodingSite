@@ -426,6 +426,9 @@ pre.code.mini { font-size: 13px; padding: 10px 12px; margin: 6px 0 0; box-shadow
 .side-card small { color: var(--muted); font-weight: 700; font-size: 13px; line-height: 1.3; display: block; }
 .side-ic { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: var(--brand-l); color: var(--brand); font-size: 24px; flex-shrink: 0; }
 .side-ic.fire { background: #FFF0E3; color: #F2711C; }
+.side-ic.train { background: var(--red-l); color: var(--red-t); }
+.train-card { width: 100%; text-align: left; cursor: pointer; font: inherit; border-color: #FFC6C8; box-shadow: 0 6px 0 #FFD9DA; }
+.path-side .train-card { display: flex !important; }
 .streak-card.off .side-ic.fire { background: #F1EFF6; color: #B9B3CC; }
 .link-card { transition: transform .15s; }
 .link-card:hover { transform: translateY(-3px); }
@@ -598,6 +601,34 @@ pre.code.mini { font-size: 13px; padding: 10px 12px; margin: 6px 0 0; box-shadow
 .toast small { display: block; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
 #confetti { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 400; pointer-events: none; display: none; }
 
+/* ---------- Abas do ranking ---------- */
+.rank-tabs { display: inline-flex; gap: 4px; padding: 4px; margin-top: 14px; background: #fff; border: 2px solid var(--line); border-radius: 16px; }
+.rank-tabs button { border: 0; background: none; border-radius: 12px; padding: 8px 16px; font-weight: 900; color: var(--muted); cursor: pointer; }
+.rank-tabs button.on { background: var(--brand); color: #fff; }
+
+/* ---------- Impacto ---------- */
+.impact { margin-top: 26px; padding: 22px 26px; display: grid; grid-template-columns: auto 1fr auto; gap: 18px 30px; align-items: center; }
+.imp-head h3 { font-size: 24px; margin: 2px 0 0; }
+.imp-nums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.imp-nums div { text-align: center; }
+.imp-nums b, .imp-big b { display: block; font: 800 34px/1.1 var(--font-h); color: var(--brand); }
+.imp-nums small, .imp-big small { color: var(--muted); font-weight: 800; font-size: 13px; }
+.imp-link { display: inline-flex; align-items: center; gap: 6px; font-weight: 900; text-decoration: none; white-space: nowrap; }
+.imp-big { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 18px; }
+.imp-big .card { padding: 20px; text-align: center; }
+.imp-big b { font-size: 44px; }
+.imp-ligas, .imp-text { padding: 22px; margin-bottom: 18px; }
+.imp-ligas h3, .imp-text h3 { font-size: 22px; }
+.imp-liga { display: grid; grid-template-columns: auto 110px 1fr 50px; gap: 12px; align-items: center; padding: 6px 0; }
+.imp-n { text-align: right; font: 800 18px var(--font-h); }
+.imp-text p { font-size: 17px; }
+.imp-text .btn { margin: 2px 0 14px; }
+
+/* ---------- Certificado ---------- */
+.cert-modal .lang-badge { margin: 0 auto 8px; }
+.cert-preview { display: block; width: 100%; height: auto; margin-top: 16px; border-radius: 12px; border: 2px solid var(--line); }
+.pf-certs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+
 /* ---------- Privacidade ---------- */
 .privacy { max-width: 760px; padding-top: 34px; padding-bottom: 10px; }
 .privacy h1 { font-size: clamp(32px, 4.6vw, 44px); margin: 4px 0 10px; }
@@ -687,6 +718,7 @@ pre.code.mini { font-size: 13px; padding: 10px 12px; margin: 6px 0 0; box-shadow
 .level-title small { font-weight: 900; color: var(--brand); text-transform: uppercase; letter-spacing: .1em; font-size: 12px; }
 .level-title h2 { font-size: 28px; margin: 0; }
 .level-title p { color: var(--muted); font-weight: 700; margin: 2px 0 8px; }
+.tag-sensor { background: var(--brand-l); color: var(--brand); border-radius: 99px; padding: 1px 8px; letter-spacing: .06em; }
 .lvl-goals { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
 .lvl-goals span { display: inline-flex; align-items: center; gap: 2px; background: var(--gold-l); color: var(--gold-t); border-radius: 99px; padding: 4px 12px; font-weight: 800; font-size: 13px; }
 .lvl-goals .ic { color: var(--gold-d); width: 15px; height: 15px; }
@@ -770,6 +802,7 @@ pre.code.mini { font-size: 13px; padding: 10px 12px; margin: 6px 0 0; box-shadow
   .reasons, .steps3 { grid-template-columns: 1fr 1fr; }
   .myths { grid-template-columns: 1fr; }
   .arena-promo { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .impact { grid-template-columns: 1fr; }
   .about-art { max-width: 320px; }
   .footer-in { grid-template-columns: 1fr; }
   .footer-links { justify-content: flex-start; }
@@ -844,6 +877,9 @@ pre.code.mini { font-size: 13px; padding: 10px 12px; margin: 6px 0 0; box-shadow
   .rank-row { gap: 10px; padding: 8px 10px; }
   .rank-row .league { display: none; }
   .rank-note { flex-direction: column; text-align: center; }
+  .impact { grid-template-columns: 1fr; }
+  .imp-nums, .imp-big { grid-template-columns: 1fr 1fr; }
+  .imp-liga { grid-template-columns: auto 90px 1fr 40px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

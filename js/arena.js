@@ -68,6 +68,69 @@ const ARENA_LEVELS = [
       python: 'Uma ida e volta é: <code>frente(5)</code>, <code>direita()</code>, <code>frente()</code>, <code>direita()</code>, <code>frente(5)</code>, <code>esquerda()</code>, <code>frente()</code>, <code>esquerda()</code>. Repita 2 vezes!',
       java: 'Uma ida e volta é: frente(5), direita, frente, direita, frente(5), esquerda, frente, esquerda. Repita 2 vezes com um <code>for</code>!'
     }
+  },
+
+  /* ---- Missões com sensores: o mapa muda a cada vez que roda ---- */
+  {
+    name: 'Corredor surpresa', dir: 1, sensors: true,
+    variants() {
+      return [3, 4, 5, 6].map((w) => {
+        const row = [...'......'].map((_, x) => (x === 0 ? 'R' : x < w - 1 ? '.' : x === w - 1 ? 'G' : '#')).join('');
+        return ['######', '######', row, '######', '######', '######'];
+      });
+    },
+    goal: 'O corredor muda de tamanho a cada vez que você roda! Use o sensor para andar até a bandeira.',
+    limit: { python: 2, java: 3 },
+    hint: {
+      python: 'Use <code>while frente_livre():</code> e, dentro dele, <code>frente()</code>. O Guardinho anda enquanto não tiver parede na frente.',
+      java: 'Use <code>while (guardinho.frenteLivre()) {</code>, com <code>guardinho.frente();</code> dentro.'
+    }
+  },
+  {
+    name: 'Caminho em L', dir: 0, sensors: true,
+    variants() {
+      const out = [];
+      for (const top of [0, 1, 2]) for (const right of [3, 4, 5]) {
+        const g = Array.from({ length: 6 }, () => [...'######']);
+        for (let y = top; y <= 5; y++) g[y][0] = '.';
+        for (let x = 0; x <= right; x++) g[top][x] = '.';
+        g[5][0] = 'R';
+        g[top][right] = 'G';
+        out.push(g.map((r) => r.join('')));
+      }
+      return out;
+    },
+    goal: 'Suba até a parede, vire à direita e ande até a bandeira. A altura e a largura mudam toda vez!',
+    limit: { python: 5, java: 7 },
+    hint: {
+      python: 'São dois <code>while frente_livre():</code>, com um <code>direita()</code> no meio.',
+      java: 'São dois <code>while (guardinho.frenteLivre()) { ... }</code>, com um <code>guardinho.direita();</code> no meio.'
+    }
+  },
+  {
+    name: 'Bifurcação', dir: 1, sensors: true,
+    variants() {
+      return [
+        ['##.###', '##.###', '##.###', 'RB...G', '######', '######'],
+        ['##G###', '##.###', '##.###', 'RB.#..', '######', '######']
+      ];
+    },
+    goal: 'Às vezes o caminho segue reto, às vezes vira para cima. Use if e else para decidir!',
+    limit: { python: 6, java: 7 },
+    hint: {
+      python: 'Ande até a bifurcação com <code>frente(2)</code>. Depois: <code>if frente_livre():</code> segue reto; <code>else:</code> vira à esquerda e sobe.',
+      java: 'Ande até a bifurcação. Depois: <code>if (guardinho.frenteLivre()) { ... } else { ... }</code>'
+    }
+  },
+  {
+    name: 'Labirinto espiral', dir: 1, sensors: true,
+    map: ['R.....', '#####.', '..B.#.', '.#G.#B', '.####.', 'B.....'],
+    goal: 'Chegue no centro do labirinto pegando as 3 moedas. Dica de mestre: um algoritmo pequeno resolve tudo!',
+    limit: { python: 5, java: 7 },
+    hint: {
+      python: '<code>while not na_bandeira():</code> e, dentro: se a frente estiver livre, <code>frente()</code>; senão, <code>direita()</code>.',
+      java: '<code>while (!guardinho.naBandeira()) {</code> e, dentro, um <code>if</code> com <code>else</code>: anda se estiver livre, senão vira à direita.'
+    }
   }
 ];
 
@@ -118,7 +181,7 @@ const BipLang = {
 
       if (pending) {
         const top = stack[stack.length - 1];
-        if (indent <= top.indent) throw this.err(ln, 'As linhas de dentro do <code>for</code> precisam de espaços no começo (indentação). Aperte TAB antes do comando!');
+        if (indent <= top.indent) throw this.err(ln, `As linhas de dentro do <code>${pending.kw}</code> precisam de espaços no começo (indentação). Aperte TAB antes do comando!`);
         stack.push({ indent, body: pending.body });
         pending = null;
       } else {
@@ -127,18 +190,39 @@ const BipLang = {
         const want = stack[stack.length - 1].indent;
         if (indent !== want) {
           throw this.err(ln, indent > want && indent > deepest
-            ? 'Tem espaços sobrando no começo desta linha. Só use espaços nas linhas de dentro de um <code>for</code>!'
+            ? 'Tem espaços sobrando no começo desta linha. Só use espaços nas linhas de dentro de um <code>for</code>, <code>while</code> ou <code>if</code>!'
             : 'Os espaços desta linha não combinam com os das linhas de cima. Confira a indentação!');
         }
       }
 
+      const body = stack[stack.length - 1].body;
+      if (/^else\b/.test(code)) {
+        if (!/^else\s*:$/.test(code)) throw this.err(ln, 'Escreva assim: <code>else:</code>');
+        const prev = body[body.length - 1];
+        if (!prev || prev.type !== 'if' || prev.elseBody) throw this.err(ln, 'O <code>else:</code> precisa vir logo depois de um <code>if</code>, com os mesmos espaços no começo.');
+        prev.elseBody = [];
+        pending = { body: prev.elseBody, line: ln, kw: 'else' };
+        return;
+      }
       const node = this.pyStatement(code, ln);
-      stack[stack.length - 1].body.push(node);
-      if (node.type === 'loop') pending = node;
+      body.push(node);
+      if (node.body) pending = { body: node.body, line: ln, kw: node.kw };
     });
 
-    if (pending) throw this.err(pending.line, 'O <code>for</code> precisa de pelo menos uma linha dentro dele (com espaços no começo).');
+    if (pending) throw this.err(pending.line, `O <code>${pending.kw}</code> precisa de pelo menos uma linha dentro dele (com espaços no começo).`);
     return root;
+  },
+
+  /* condição dos sensores: frente_livre(), na_bandeira() e o not */
+  pyCond(s, ln) {
+    s = s.trim().replace(/^\((.*)\)$/, '$1').trim();
+    const m = s.match(/^(not\s+)?(?:guardinho\s*\.\s*)?(frente_livre|na_bandeira)\s*\(\s*\)$/);
+    if (m) return { not: !!m[1], sensor: m[2] === 'frente_livre' ? 'frente' : 'bandeira', line: ln };
+    if (/^True$/.test(s)) throw this.err(ln, 'Aqui o <code>while True</code> nunca acabaria! Use um sensor: <code>while frente_livre():</code>');
+    if (/^(not\s+)?(frente_livre|na_bandeira)$/.test(s)) throw this.err(ln, `Faltaram os parênteses: <code>${s}()</code>`);
+    if (/frente_livre|na_bandeira/i.test(s)) throw this.err(ln, 'Python diferencia maiúsculas: escreva <code>frente_livre()</code> ou <code>na_bandeira()</code>.');
+    if (/frenteLivre|naBandeira|!/.test(s)) throw this.err(ln, 'Isso parece Java! Em Python: <code>frente_livre()</code>, <code>na_bandeira()</code> e <code>not</code>.');
+    throw this.err(ln, 'Na condição use um sensor: <code>frente_livre()</code> ou <code>na_bandeira()</code> (com <code>not</code> se quiser inverter).');
   },
 
   pyStatement(code, ln) {
@@ -152,10 +236,20 @@ const BipLang = {
       if (!m) throw this.err(ln, 'Escreva o for assim: <code>for i in range(4):</code>');
       const times = +m[2];
       if (times > 50) throw this.err(ln, 'Calma! Use no máximo <code>range(50)</code>.');
-      return { type: 'loop', times, body: [], line: ln };
+      return { type: 'loop', times, body: [], line: ln, kw: 'for' };
+    }
+
+    if (/^(while|if|elif)\b/.test(code)) {
+      const kw = code.match(/^(while|if|elif)/)[1];
+      if (kw === 'elif') throw this.err(ln, 'Nesta arena use só <code>if</code> e <code>else</code>.');
+      if (/\{\s*$/.test(code)) throw this.err(ln, `Isso parece Java! Em Python: <code>${kw} frente_livre():</code>`);
+      if (!code.endsWith(':')) throw this.err(ln, `Faltaram os dois pontos <code>:</code> no final do <code>${kw}</code>.`);
+      const cond = this.pyCond(code.slice(kw.length, -1), ln);
+      return { type: kw, cond, body: [], line: ln, kw };
     }
 
     code = code.replace(/;\s*$/, '').replace(/^guardinho\s*\.\s*/, '');
+    if (/^(frente_livre|na_bandeira)\s*\(/.test(code)) throw this.err(ln, `<code>${code.split('(')[0]}()</code> é uma pergunta: use dentro de um <code>if</code> ou <code>while</code>.`);
 
     if ((m = code.match(/^frente\s*\(\s*(\d*)\s*\)$/))) {
       const n = m[1] === '' ? 1 : +m[1];
@@ -170,8 +264,8 @@ const BipLang = {
     if (/^(frente|direita|esquerda)\s*\(/.test(code) && !/\)$/.test(code)) throw this.err(ln, 'Faltou fechar o parêntese <code>)</code>.');
     if (/^frente\s*\(/.test(code)) throw this.err(ln, 'Dentro do <code>frente()</code> vai um número, tipo <code>frente(3)</code>.');
     if (/^(frente|direita|esquerda|print)/i.test(code)) throw this.err(ln, 'Python diferencia maiúsculas e minúsculas: escreva os comandos em letras minúsculas.');
-    if (/^(while|if|def)\b/.test(code)) throw this.err(ln, 'Nesta arena use o <code>for</code> para repetir.');
-    throw this.err(ln, `Não conheço <code>${esc(code.slice(0, 30))}</code>. Comandos: <code>frente()</code>, <code>direita()</code>, <code>esquerda()</code>, <code>print()</code> e <code>for</code>.`);
+    if (/^def\b/.test(code)) throw this.err(ln, 'Nesta arena não criamos funções. Use os comandos do Guardinho!');
+    throw this.err(ln, `Não conheço <code>${esc(code.slice(0, 30))}</code>. Comandos: <code>frente()</code>, <code>direita()</code>, <code>esquerda()</code>, <code>print()</code>, <code>for</code>, <code>while</code> e <code>if</code>.`);
   },
 
   /* ---- Java ---- */
@@ -258,20 +352,55 @@ const BipLang = {
       if (t.v === '{') return { type: 'loop', times: 1, body: block(), line: t.line };
       if (t.v === ';') { next(); return { type: 'noop' }; }
       if (t.t === 'id' && t.v === 'for') return forStatement();
+      if (t.t === 'id' && (t.v === 'while' || t.v === 'if')) return condStatement();
+      if (t.t === 'id' && t.v === 'else') throw self.err(t.line, 'Esse <code>else</code> está sem um <code>if</code> antes dele.');
       if (t.t === 'id' && t.v === 'guardinho') return heroStatement();
       if (t.t === 'id' && t.v === 'System') return printStatement();
       if (t.t === 'id' && CMDS.includes(t.v)) throw self.err(t.line, `Em Java os comandos começam com <code>guardinho.</code> Escreva: <code>guardinho.${t.v}();</code>`);
       if (t.t === 'id' && /^guardinho$/i.test(t.v)) throw self.err(t.line, 'Java diferencia maiúsculas: escreva <code>guardinho</code> com letras minúsculas.');
       if (t.t === 'id' && t.v === 'robo') throw self.err(t.line, 'Aqui quem anda é o cavaleiro: escreva <code>guardinho.frente();</code>');
-      if (t.t === 'id' && /^(while|if|void|public)$/.test(t.v)) throw self.err(t.line, 'Nesta arena use o <code>for</code> para repetir.');
+      if (t.t === 'id' && /^(void|public|class)$/.test(t.v)) throw self.err(t.line, 'Nesta arena não criamos métodos nem classes. Use os comandos do Guardinho!');
       if (t.t === 'id' && t.v === 'print') throw self.err(t.line, 'Em Java o print é assim: <code>System.out.println("Oi!");</code>');
-      throw self.err(t.line, `Não conheço <code>${esc(t.v)}</code>. Use <code>guardinho.frente();</code>, <code>guardinho.direita();</code>, <code>guardinho.esquerda();</code> ou <code>for</code>.`);
+      throw self.err(t.line, `Não conheço <code>${esc(t.v)}</code>. Use <code>guardinho.frente();</code>, <code>guardinho.direita();</code>, <code>guardinho.esquerda();</code>, <code>for</code>, <code>while</code> ou <code>if</code>.`);
+    }
+    function cond() {
+      const t = peek();
+      if (!t) throw self.err(lastLine(), 'Faltou a condição.');
+      let not = false;
+      if (t.v === '!') { next(); not = true; }
+      const g = next();
+      if (g && g.v === 'true') throw self.err(g.line, 'Aqui o <code>while (true)</code> nunca acabaria! Use um sensor: <code>guardinho.frenteLivre()</code>');
+      if (g && (g.v === 'frente_livre' || g.v === 'na_bandeira' || g.v === 'not')) throw self.err(g.line, 'Isso parece Python! Em Java: <code>guardinho.frenteLivre()</code>, <code>guardinho.naBandeira()</code> e <code>!</code> para inverter.');
+      if (!g || g.v !== 'guardinho') throw self.err(g ? g.line : lastLine(), 'Na condição use um sensor: <code>guardinho.frenteLivre()</code> ou <code>guardinho.naBandeira()</code>.');
+      expect('.', 'Depois de <code>guardinho</code> vem um ponto.');
+      const s = next();
+      if (!s || (s.v !== 'frenteLivre' && s.v !== 'naBandeira')) {
+        if (s && /^(frentelivre|nabandeira)$/i.test(s.v)) throw self.err(s.line, 'Java diferencia maiúsculas: <code>frenteLivre()</code> e <code>naBandeira()</code>.');
+        throw self.err(s ? s.line : lastLine(), 'Os sensores são <code>frenteLivre()</code> e <code>naBandeira()</code>.');
+      }
+      expect('(', `Faltaram os parênteses: <code>guardinho.${s.v}()</code>`);
+      expect(')', 'Faltou fechar o parêntese <code>)</code>.');
+      return { not, sensor: s.v === 'frenteLivre' ? 'frente' : 'bandeira', line: s.line };
+    }
+    function condStatement() {
+      const t = next();
+      expect('(', `Depois do <code>${t.v}</code> vem a condição entre parênteses: <code>${t.v} (guardinho.frenteLivre()) {</code>`);
+      const c = cond();
+      expect(')', `Faltou fechar o parêntese <code>)</code> do ${t.v}.`);
+      const body = (peek() && peek().v === '{') ? block() : [statement()];
+      const node = { type: t.v, cond: c, body, line: t.line };
+      if (t.v === 'if' && peek() && peek().v === 'else') {
+        next();
+        node.elseBody = (peek() && peek().v === '{') ? block() : [statement()];
+      }
+      return node;
     }
     function heroStatement() {
       const t = next();
       expect('.', 'Depois de <code>guardinho</code> vem um ponto: <code>guardinho.frente();</code>');
       const name = next();
       if (!name || name.t !== 'id') throw self.err(t.line, 'Depois de <code>guardinho.</code> vem o nome do comando: frente, direita ou esquerda.');
+      if (name.v === 'frenteLivre' || name.v === 'naBandeira') throw self.err(name.line, `<code>${name.v}()</code> é uma pergunta: use dentro de um <code>if</code> ou <code>while</code>.`);
       if (!CMDS.includes(name.v)) {
         if (CMDS.includes(name.v.toLowerCase())) throw self.err(name.line, `Java diferencia maiúsculas: escreva <code>guardinho.${name.v.toLowerCase()}();</code>`);
         throw self.err(name.line, `O Guardinho não conhece <code>${esc(name.v)}</code>. Use frente, direita ou esquerda.`);
@@ -335,31 +464,51 @@ const BipLang = {
     return statements(false);
   },
 
-  /* Transforma o programa em uma lista de ações simples */
-  flatten(nodes, out = []) {
+  hasCode(nodes) { return nodes.some((n) => n.type !== 'noop'); },
+
+  /* Roda o programa passo a passo: cada ação sai na hora, e os sensores
+     leem o mundo (w) já atualizado pelas ações anteriores. */
+  *exec(nodes, w) {
     for (const n of nodes) {
       if (n.type === 'loop') {
-        for (let k = 0; k < n.times; k++) {
-          this.flatten(n.body, out);
-          if (out.length > this.MAX_ACTIONS) throw this.err(n.line, 'Programa comprido demais! Use números menores no for.');
-        }
+        for (let k = 0; k < n.times; k++) yield* this.exec(n.body, w);
+      } else if (n.type === 'while') {
+        while (this.test(n.cond, w)) yield* this.exec(n.body, w);
+      } else if (n.type === 'if') {
+        if (this.test(n.cond, w)) yield* this.exec(n.body, w);
+        else if (n.elseBody) yield* this.exec(n.elseBody, w);
       } else if (n.type === 'move') {
-        for (let k = 0; k < n.n; k++) out.push({ a: 'move', line: n.line });
+        for (let k = 0; k < n.n; k++) yield { a: 'move', line: n.line };
       } else if (n.type === 'turn') {
-        out.push({ a: 'turn', dir: n.dir, line: n.line });
+        yield { a: 'turn', dir: n.dir, line: n.line };
       } else if (n.type === 'say') {
-        out.push({ a: 'say', text: n.text, line: n.line });
+        yield { a: 'say', text: n.text, line: n.line };
       }
-      if (out.length > this.MAX_ACTIONS) throw this.err(n.line || 1, 'Programa comprido demais!');
+    }
+  },
+  test(c, w) {
+    w.checks = (w.checks || 0) + 1;
+    if (w.checks > 5000) throw this.err(c.line, 'O programa ficou preso num loop infinito! Confira a condição do <code>while</code>.');
+    const v = c.sensor === 'frente' ? w.frenteLivre() : w.naBandeira();
+    return c.not ? !v : v;
+  },
+
+  /* Lista de ações de um programa sem sensores (usada na demo do topo) */
+  flatten(nodes) {
+    const sem = () => { throw this.err(0, 'Este programa usa sensores.'); };
+    const out = [];
+    for (const a of this.exec(nodes, { frenteLivre: sem, naBandeira: sem })) {
+      out.push(a);
+      if (out.length > this.MAX_ACTIONS) throw this.err(a.line, 'Programa comprido demais! Use números menores no for.');
     }
     return out;
   }
 };
 
 /* ---------- Simulação (sem tela, também usada nos testes) ---------- */
-function arenaLevelState(lv) {
+function arenaLevelState(lv, map = lv.map) {
   const st = { x: 0, y: 0, d: lv.dir, gx: -1, gy: -1, bats: new Set() };
-  lv.map.forEach((row, y) => [...row].forEach((ch, x) => {
+  map.forEach((row, y) => [...row].forEach((ch, x) => {
     if (ch === 'R' || ch === 'X') { st.x = x; st.y = y; }
     if (ch === 'G' || ch === 'X') { st.gx = x; st.gy = y; }
     if (ch === 'B') st.bats.add(x + ',' + y);
@@ -367,6 +516,40 @@ function arenaLevelState(lv) {
   return st;
 }
 const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+const arenaMaps = (lv) => (lv.variants ? lv.variants() : [lv.map]);
+
+/* sensores do Guardinho, lendo o estado atual (st) no mapa */
+function arenaWorld(st, map) {
+  return {
+    checks: 0,
+    frenteLivre() {
+      const [dx, dy] = DIRS[st.d];
+      const nx = st.x + dx, ny = st.y + dy;
+      return ny >= 0 && ny < map.length && nx >= 0 && nx < map[0].length && map[ny][nx] !== '#';
+    },
+    naBandeira() { return st.x === st.gx && st.y === st.gy; }
+  };
+}
+
+/* roda um programa inteiro sem animação: diz se passou e por quê */
+function arenaSimulate(prog, lv, map) {
+  const st = arenaLevelState(lv, map);
+  const w = arenaWorld(st, map);
+  let n = 0;
+  try {
+    for (const a of BipLang.exec(prog, w)) {
+      if (++n > BipLang.MAX_ACTIONS) return { ok: false, why: 'longo' };
+      if (a.a === 'turn') st.d = (st.d + a.dir + 4) % 4;
+      if (a.a === 'move') {
+        const [dx, dy] = DIRS[st.d];
+        const nx = st.x + dx, ny = st.y + dy;
+        if (nx < 0 || ny < 0 || ny >= map.length || nx >= map[0].length || map[ny][nx] === '#') return { ok: false, why: 'bateu' };
+        st.x = nx; st.y = ny; st.bats.delete(nx + ',' + ny);
+      }
+    }
+  } catch (e) { return { ok: false, why: 'erro', e }; }
+  return { ok: st.x === st.gx && st.y === st.gy && st.bats.size === 0, why: 'fim' };
+}
 
 /* ---------- Interface da Arena ---------- */
 const Arena = {
@@ -505,22 +688,31 @@ const Arena = {
     this.renderChips();
 
     const lim = lv.limit[this.lang];
-    $('.level-title', v).innerHTML = `<small>Missão ${i + 1} de ${ARENA_LEVELS.length}</small><h2>${lv.name}</h2><p>${lv.goal}</p>
+    $('.level-title', v).innerHTML = `<small>Missão ${i + 1} de ${ARENA_LEVELS.length}${lv.sensors ? ' · <span class="tag-sensor">sensores</span>' : ''}${lv.variants ? ' · <span class="tag-sensor">mapa surpresa</span>' : ''}</small><h2>${lv.name}</h2><p>${lv.goal}</p>
       <div class="lvl-goals"><span>${icon('star')}Chegar na bandeira</span><span>${icon('star')}${icon('star')}Usar até <b>${lim}</b> linha${lim > 1 ? 's' : ''} de código</span></div>`;
     $('.ed-file', v).innerHTML = this.lang === 'java' ? `${langBadge('java', 'mini')}Missao.java` : `${langBadge('python', 'mini')}missao.py`;
 
     const isPy = this.lang === 'python';
-    const snips = isPy
+    let snips = isPy
       ? [['frente()', 'frente()'], ['frente(2)', 'frente(2)'], ['direita()', 'direita()'], ['esquerda()', 'esquerda()'], ['for', 'for i in range(4):\n    §'], ['print', 'print("Oi!")']]
       : [['guardinho.frente();', 'guardinho.frente();'], ['guardinho.frente(2);', 'guardinho.frente(2);'], ['guardinho.direita();', 'guardinho.direita();'], ['guardinho.esquerda();', 'guardinho.esquerda();'], ['for', 'for (int i = 0; i < 4; i++) {\n    §\n}'], ['println', 'System.out.println("Oi!");']];
+    if (lv.sensors) {
+      snips = snips.filter(([l]) => !/print|frente\(2\)/.test(l)).concat(isPy
+        ? [['while frente_livre()', 'while frente_livre():\n    §'], ['while not na_bandeira()', 'while not na_bandeira():\n    §'], ['if / else', 'if frente_livre():\n    §\nelse:\n    ']]
+        : [['while (frenteLivre)', 'while (guardinho.frenteLivre()) {\n    §\n}'], ['while (!naBandeira)', 'while (!guardinho.naBandeira()) {\n    §\n}'], ['if / else', 'if (guardinho.frenteLivre()) {\n    §\n} else {\n    \n}']]);
+    }
     $('.snips', v).innerHTML = '<span class="snips-label">Atalhos:</span>' + snips.map(([label, code]) => `<button class="snip" data-snip="${esc(code)}">${esc(label)}</button>`).join('');
 
     $('.ref-body', v).innerHTML = (isPy ? [
       ['frente()', 'anda 1 casa para frente'], ['frente(3)', 'anda 3 casas'], ['direita()', 'vira 90° para a direita'], ['esquerda()', 'vira 90° para a esquerda'],
-      ['for i in range(4):', 'repete 4 vezes as linhas de dentro (com 4 espaços no começo)'], ['print("Oi!")', 'o Guardinho fala'], ['# texto', 'comentário: o Python ignora']
+      ['for i in range(4):', 'repete 4 vezes as linhas de dentro (com 4 espaços no começo)'], ['print("Oi!")', 'o Guardinho fala'], ['# texto', 'comentário: o Python ignora'],
+      ['frente_livre()', 'sensor: True se não tem parede na frente'], ['na_bandeira()', 'sensor: True se está em cima da bandeira'],
+      ['while frente_livre():', 'repete enquanto a condição for verdadeira'], ['if frente_livre():', 'decide: se for verdade faz o de dentro; senão, o do else:']
     ] : [
       ['guardinho.frente();', 'anda 1 casa para frente'], ['guardinho.frente(3);', 'anda 3 casas'], ['guardinho.direita();', 'vira 90° para a direita'], ['guardinho.esquerda();', 'vira 90° para a esquerda'],
-      ['for (int i = 0; i < 4; i++) { }', 'repete 4 vezes o que está entre as chaves'], ['System.out.println("Oi!");', 'o Guardinho fala'], ['// texto', 'comentário: o Java ignora']
+      ['for (int i = 0; i < 4; i++) { }', 'repete 4 vezes o que está entre as chaves'], ['System.out.println("Oi!");', 'o Guardinho fala'], ['// texto', 'comentário: o Java ignora'],
+      ['guardinho.frenteLivre()', 'sensor: true se não tem parede na frente'], ['guardinho.naBandeira()', 'sensor: true se está em cima da bandeira'],
+      ['while (guardinho.frenteLivre()) { }', 'repete enquanto a condição for verdadeira'], ['if (...) { } else { }', 'decide entre dois caminhos (use ! para inverter)']
     ]).map(([c, d]) => `<div class="ref-row"><code>${highlight(c, this.lang)}</code><span>${d}</span></div>`).join('') +
       '<p class="ref-note">Estes são comandos especiais do simulador. No robô de verdade os nomes mudam (você aprende nas trilhas), mas a lógica é a mesmíssima.</p>';
 
@@ -529,19 +721,23 @@ const Arena = {
     this.ta.readOnly = false;
     this.clearHl();
     this.sync();
-    this.resetBoard();
+    this.resetBoard(true);
     const st = this.stars(this.lang, i);
     this.say(st ? `Você já tem ${st} estrela${st > 1 ? 's' : ''} nesta missão. Quer tentar de novo?` : `${lv.goal} Escreva o código e aperte <b>Rodar</b>.`);
   },
 
   /* ---- tabuleiro ---- */
-  resetBoard() {
+  resetBoard(sortear) {
     const lv = ARENA_LEVELS[this.level];
-    this.st = arenaLevelState(lv);
+    if (sortear || !this.map || this.mapLevel !== this.level) {
+      this.map = lv.variants ? pick(lv.variants()) : lv.map;
+      this.mapLevel = this.level;
+    }
+    this.st = arenaLevelState(lv, this.map);
     this.angle = this.st.d * 90;
     const b = $('#board');
     let cells = '';
-    lv.map.forEach((row, y) => [...row].forEach((ch, x) => {
+    this.map.forEach((row, y) => [...row].forEach((ch, x) => {
       const cls = ['cell', (x + y) % 2 ? 'alt' : ''];
       let inner = '';
       if (ch === '#') cls.push('rock');
@@ -565,20 +761,22 @@ const Arena = {
   /* ---- execução ---- */
   run() {
     if (this.running) { this.stop(); this.say('Programa parado.'); return; }
-    this.resetBoard();
+    this.resetBoard(!!ARENA_LEVELS[this.level].variants);
     this.clearHl();
-    let actions;
-    try {
-      const prog = BipLang.parse(this.ta.value, this.lang);
-      actions = BipLang.flatten(prog);
-      if (!actions.length) throw BipLang.err(0, 'Escreva algum comando primeiro!');
-    } catch (e) {
+    let prog, gen;
+    const showErr = (e) => {
       if (!e.bip) throw e;
+      this.stop();
       if (e.line) this.markLine(e.line, true);
       this.say(`${e.line ? `<b>Linha ${e.line}:</b> ` : ''}${e.message}`, 'sad', 'err');
       Sound.play('bad');
-      return;
-    }
+    };
+    try {
+      prog = BipLang.parse(this.ta.value, this.lang);
+      if (!BipLang.hasCode(prog)) throw BipLang.err(0, 'Escreva algum comando primeiro!');
+      gen = BipLang.exec(prog, arenaWorld(this.st, this.map));
+    } catch (e) { showErr(e); return; }
+    this.prog = prog;
     this.running = true;
     this.ta.readOnly = true;
     const rb = $('.ar-run');
@@ -588,8 +786,11 @@ const Arena = {
     let k = 0;
     const step = () => {
       if (!this.running) return;
-      if (k >= actions.length) return this.finish();
-      const act = actions[k++];
+      let r;
+      try { r = gen.next(); } catch (e) { showErr(e); return; }
+      if (r.done) return this.finish();
+      if (++k > BipLang.MAX_ACTIONS) { showErr(BipLang.err(r.value.line, 'Programa comprido demais! Será que o <code>while</code> nunca termina?')); return; }
+      const act = r.value;
       this.markLine(act.line, false);
       const st = this.st;
       if (act.a === 'turn') {
@@ -600,9 +801,9 @@ const Arena = {
       } else if (act.a === 'move') {
         const [dx, dy] = DIRS[st.d];
         const nx = st.x + dx, ny = st.y + dy;
-        const lv = ARENA_LEVELS[this.level];
-        const out = nx < 0 || ny < 0 || ny >= lv.map.length || nx >= lv.map[0].length;
-        if (out || lv.map[ny][nx] === '#') return this.crash(act.line, out);
+        const map = this.map;
+        const out = nx < 0 || ny < 0 || ny >= map.length || nx >= map[0].length;
+        if (out || map[ny][nx] === '#') return this.crash(act.line, out);
         st.x = nx; st.y = ny;
         this.placeBot();
         Sound.play('move');
@@ -652,6 +853,12 @@ const Arena = {
         : !onGoal ? 'Quase! O Guardinho não terminou em cima da bandeira.'
         : `Chegou na bandeira, mas faltou pegar ${moedas}!`;
       this.say(msg + ' Tente de novo, você consegue!', 'sad', 'err');
+      Sound.play('bad');
+      return;
+    }
+    // mapa surpresa: o código precisa funcionar em todos os mapas, não só neste
+    if (lv.variants && lv.variants().some((m) => !arenaSimulate(this.prog, lv, m).ok)) {
+      this.say('Chegou neste mapa! Mas o mapa muda a cada vez, e o seu código não funciona em todos. Use os <b>sensores</b> para o Guardinho decidir sozinho.', 'wow', 'err');
       Sound.play('bad');
       return;
     }

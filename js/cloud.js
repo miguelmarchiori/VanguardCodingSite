@@ -131,6 +131,15 @@ const Cloud = {
     } catch (e) {
       console.warn('[VanCode] erro ao salvar na nuvem:', e);
     }
+    // ranking semanal: só funciona depois que as regras novas forem publicadas no Firebase
+    const wx = weekXP();
+    if (wx > 0) {
+      try {
+        await F.setDoc(F.doc(this.db, 'semanas', isoWeek(), 'jogadores', uid), { name: safeName(S.name), xp: wx, updatedAt: F.serverTimestamp() });
+      } catch (e) {
+        if (e.code !== 'permission-denied') console.warn('[VanCode] ranking semanal:', e);
+      }
+    }
   },
 
   /* apaga o progresso, o cartão do ranking e o login da pessoa */
@@ -142,6 +151,7 @@ const Cloud = {
     try {
       await F.deleteDoc(F.doc(this.db, 'players', uid));
       await F.deleteDoc(F.doc(this.db, 'progress', uid));
+      await F.deleteDoc(F.doc(this.db, 'semanas', isoWeek(), 'jogadores', uid)).catch(() => null);
     } catch (e) {
       console.warn('[VanCode] erro ao apagar dados:', e);
       this.deleting = false;
@@ -170,5 +180,25 @@ const Cloud = {
     const q = F.query(F.collection(this.db, 'players'), F.orderBy('xp', 'desc'), F.limit(n));
     const snap = await F.getDocs(q);
     return snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+  },
+
+  async topWeek(n = 50) {
+    const F = this.F;
+    const q = F.query(F.collection(this.db, 'semanas', isoWeek(), 'jogadores'), F.orderBy('xp', 'desc'), F.limit(n));
+    const snap = await F.getDocs(q);
+    return snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+  },
+
+  /* números de impacto: somas feitas no próprio Firebase, sem baixar os jogadores */
+  async stats() {
+    const F = this.F;
+    const col = F.collection(this.db, 'players');
+    const agg = await F.getAggregateFromServer(col, { contas: F.count(), xp: F.sum('xp'), licoes: F.sum('lessons'), missoes: F.sum('arena') });
+    const ligas = await Promise.all(LEAGUES.map((l, k) => {
+      const prox = LEAGUES[k + 1];
+      const q = prox ? F.query(col, F.where('xp', '>=', l.min), F.where('xp', '<', prox.min)) : F.query(col, F.where('xp', '>=', l.min));
+      return F.getCountFromServer(q).then((s) => s.data().count);
+    }));
+    return Object.assign(agg.data(), { ligas, em: new Date() });
   }
 };

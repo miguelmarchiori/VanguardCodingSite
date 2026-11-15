@@ -4,8 +4,11 @@ Site da equipe **FTC Vanguard #37520** que ensina crianças e adolescentes a tro
 
 - **Python** para LEGO® SPIKE™ Prime: 8 unidades, 31 lições, do `print` até seguidor de linha proporcional, giroscópio, multitarefa e máquina de estados
 - **Java** para FIRST® Tech Challenge: 8 unidades, 31 lições, do `println` até mecanum, encoders, IMU, PID, máquina de estados e AprilTags
-- **Arena**: 6 missões em que o aluno digita Python ou Java e vê o cavaleiro **Guardinho** andar no tabuleiro
-- **Contas com Google + ranking**: progresso salvo na nuvem e ligas de Escudeiro a Lenda
+- **Arena**: 10 missões em que o aluno digita Python ou Java e vê o cavaleiro **Guardinho** andar no tabuleiro. As últimas usam sensores (`frente_livre()`, `na_bandeira()`), `while` e `if/else`, com mapas que mudam a cada vez que roda (o código só passa se funcionar em todos)
+- **Contas com Google + ranking**: progresso salvo na nuvem, ranking semanal e geral, ligas de Escudeiro a Lenda
+- **Teste para pular unidades**, **treino de erros** e **certificado** em imagem ao concluir uma trilha
+- **Painel de impacto** (`#/impacto`) com números reais para o portfólio e os prêmios de divulgação do FTC
+- **App instalável** no celular (PWA), que abre até sem internet
 
 Funciona como um app de idiomas: lições curtinhas, vidas, XP, ofensiva, meta diária e conquistas. Sem conta, o progresso fica no navegador. Com conta Google, fica salvo no Firebase e o aluno aparece no ranking com o apelido que escolher.
 
@@ -31,6 +34,8 @@ Pronto: aparece o botão **Entrar com Google** e a página **Ranking** passa a f
 
 > Os dados do `firebaseConfig` **não são senha** e podem ficar públicos. Quem protege os dados são as regras do `firestore.rules`: cada aluno só lê e escreve o próprio progresso, e o ranking guarda só apelido e números (nunca e-mail).
 
+**Ranking semanal:** depende das regras novas do [`firestore.rules`](firestore.rules) (o trecho `semanas`). Enquanto elas não forem publicadas no console, o site mostra só o ranking geral, sem erro nenhum.
+
 **Moderação:** se alguém colocar um apelido impróprio, apague ou edite o documento dele em Firestore → `players`.
 
 **Cargos especiais:** o selo dourado com coroa (ex.: *Criador*) é configurado em [`js/cargos.js`](js/cargos.js). Para dar um cargo a alguém, copie o ID do documento da pessoa em Firestore → `players` e adicione uma linha no arquivo. O cargo fica preso ao ID da conta, então ninguém ganha o selo só copiando o apelido.
@@ -49,7 +54,9 @@ js/arena.js           missões da Arena + mini-interpretador Python/Java
 js/firebase-config.js configuração do Firebase (login e ranking)
 js/cloud.js           login com Google, sincronização e ranking
 js/cargos.js          cargos especiais (selo com coroa no ranking)
-js/app.js             estado, rotas, mapa da trilha, lições, perfil, ranking
+js/app.js             estado, rotas, trilhas, lições, treino, certificado, ranking, impacto
+sw.js                 service worker do app instalável (rede primeiro, cache quando offline)
+manifest.webmanifest  nome, cores e ícones do app instalável
 firestore.rules       regras de segurança do banco
 ```
 
@@ -65,7 +72,9 @@ As lições ficam em `js/courses.js` e nos arquivos `courses-*-plus.js`. Cada li
 | `order`  | colocar linhas na ordem           | `q`, `lines` (ordem certa), `alts` (outras ordens válidas) |
 | `type`   | digitar o código                  | `q`, `a` (lista de respostas aceitas) |
 
-Para missões novas da Arena, edite `ARENA_LEVELS` em `js/arena.js` (`#` pedra, `B` moeda, `G` bandeira, `R` início).
+Para missões novas da Arena, edite `ARENA_LEVELS` em `js/arena.js` (`#` pedra, `B` moeda, `G` bandeira, `R` início). Uma missão pode ter um mapa fixo (`map`) ou vários mapas surpresa (`variants()`), e o código do aluno precisa funcionar em todos.
+
+Ao publicar uma mudança grande, troque o nome do cache no topo do `sw.js` (ex.: `vancode-v2`) para os celulares com o app instalado limparem a versão guardada.
 
 **Dica para apresentações:** no perfil existe o *Modo mentor*, que libera todas as lições.
 

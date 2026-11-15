@@ -26,7 +26,7 @@ function migrateDone(done) {
 const DEFAULT_STATE = {
   xp: 0, streak: 0, lastDay: null, daily: { day: null, xp: 0 },
   done: {}, perfect: 0, lessons: 0, arena: {}, achievements: {},
-  name: '', mentor: false, goal: 30, uid: null
+  name: '', mentor: false, goal: 30, uid: null, erros: [], semana: { id: null, xp: 0 }
 };
 const freshState = () => JSON.parse(JSON.stringify(DEFAULT_STATE));
 function normalizeState(x) {
@@ -35,6 +35,8 @@ function normalizeState(x) {
   s.done = migrateDone(s.done);
   s.arena = s.arena || {};
   s.achievements = s.achievements || {};
+  s.erros = Array.isArray(s.erros) ? s.erros : [];
+  s.semana = s.semana && s.semana.id ? s.semana : { id: null, xp: 0 };
   return s;
 }
 let S = normalizeState(Store.get('vg_state', {}));
@@ -46,6 +48,15 @@ const dayStr = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1
 const yesterdayStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return dayStr(d); };
 const currentStreak = () => (S.lastDay === dayStr() || S.lastDay === yesterdayStr()) ? S.streak : 0;
 const dailyXP = () => (S.daily.day === dayStr() ? S.daily.xp : 0);
+/* semana no formato 2026-S46 (a semana começa na segunda-feira) */
+function isoWeek(d = new Date()) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  const y = t.getUTCFullYear();
+  return `${y}-S${String(Math.ceil(((t - Date.UTC(y, 0, 1)) / 86400000 + 1) / 7)).padStart(2, '0')}`;
+}
+const weekXP = () => (S.semana.id === isoWeek() ? S.semana.xp : 0);
+const daysToMonday = () => { const d = new Date().getDay(); return d === 0 ? 1 : 8 - d; };
 const cleanName = (n) => String(n || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 20);
 const firstName = (n) => cleanName(String(n || '').split(' ')[0]);
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
@@ -72,6 +83,9 @@ function addXP(n) {
   S.xp += n;
   if (S.daily.day !== t) S.daily = { day: t, xp: 0 };
   S.daily.xp += n;
+  const w = isoWeek();
+  if (S.semana.id !== w) S.semana = { id: w, xp: 0 };
+  S.semana.xp += n;
   if (S.lastDay !== t) {
     const before = currentStreak();
     S.streak = S.lastDay === yesterdayStr() ? S.streak + 1 : 1;
@@ -177,6 +191,8 @@ function mergeStates(a, b) {
   m.daily = a.daily.day === b.daily.day ? { day: a.daily.day, xp: Math.max(a.daily.xp, b.daily.xp) } : ((a.daily.day || '') > (b.daily.day || '') ? a.daily : b.daily);
   m.name = a.name || b.name;
   m.mentor = a.mentor || b.mentor;
+  m.erros = [...new Set(a.erros.concat(b.erros))].slice(-60);
+  m.semana = a.semana.id === b.semana.id ? { id: a.semana.id, xp: Math.max(a.semana.xp, b.semana.xp) } : ((a.semana.id || '') > (b.semana.id || '') ? a.semana : b.semana);
   return m;
 }
 
@@ -263,6 +279,7 @@ function askDeleteAccount() {
 
 function onCloudChange() {
   renderAccount();
+  loadImpact();
   if (!$('#view-ranking').hidden) showRanking();
   if ($('#modal .profile')) showProfile();
 }
@@ -307,6 +324,12 @@ function route() {
     Arena.show();
     nav('arena');
     document.title = 'Arena · VanCode';
+    window.scrollTo(0, 0);
+  } else if (page === 'impacto') {
+    $('#view-impact').hidden = false;
+    renderImpact();
+    loadImpact();
+    document.title = 'Impacto · VanCode';
     window.scrollTo(0, 0);
   } else if (page === 'privacidade') {
     $('#view-privacy').hidden = false;
@@ -548,7 +571,7 @@ function showPath(cid) {
       </div>
       ${units}
       <div class="path-end">${done === tot
-        ? `${knightSVG('happy', 'knight-md')}<h3>Trilha completa!</h3><p>Você é demais. Que tal a trilha de ${COURSES[other].name} ou as missões da Arena?</p>`
+        ? `${knightSVG('happy', 'knight-md')}<h3>Trilha completa!</h3><p>Você é demais. Que tal a trilha de ${COURSES[other].name} ou as missões da Arena?</p><button class="btn btn-gold" data-cert="${cid}">${icon('trophy')}Pegar meu certificado</button>`
         : `<span class="flag-end">${FLAG_SVG}</span><p>Complete todas as lições para virar <b>Mestre ${C.name}</b>.</p>`}</div>
     </div>
     <aside class="path-side">
@@ -560,6 +583,11 @@ function showPath(cid) {
         <span class="side-ic fire">${icon('flame')}</span>
         <div><h4>${st} dia${st === 1 ? '' : 's'} de ofensiva</h4><small>${st ? 'Volte amanhã para não perder!' : 'Faça uma lição hoje para começar.'}</small></div>
       </div>
+      ${errosDe(cid).length ? `<button class="card side-card link-card train-card" data-practice="${cid}">
+        <span class="side-ic train">${icon('reset')}</span>
+        <div><h4>Treinar erros</h4><small>${plural(errosDe(cid).length, 'pergunta', 'perguntas')} para revisar</small></div>
+        ${icon('arrow', 'arrow')}
+      </button>` : ''}
       <a class="card side-card link-card" href="#/ranking">
         <span class="side-ic">${icon('podium')}</span>
         <div><h4>Ranking</h4><small>${Cloud.user ? `Você é ${leagueOf(S.xp).name}` : 'Entre com Google para participar'}</small></div>
@@ -620,10 +648,10 @@ function startLesson(cid, i, quiz = null) {
   closePop();
   closeModal();
   const lesson = quiz ? quiz.lesson : FLAT[cid][i];
-  const hearts = quiz ? 3 : 5;
+  const hearts = quiz && quiz.type === 'skip' ? 3 : 5;
   Object.assign(LS, {
     cid, i, lesson, quiz, lang: COURSES[cid].lang,
-    queue: lesson.steps.map((s, k) => Object.assign({ k }, s)),
+    queue: lesson.steps.map((s, k) => Object.assign({ k, lid: lesson.id }, s)),
     pos: 0, hearts, mistakes: 0, solved: 0, total: lesson.steps.length,
     t0: Date.now(), review: quiz ? false : isDone(cid, i), mode: 'answer', ok: false, answer: null
   });
@@ -798,18 +826,18 @@ function mainAction() {
   if (LS.mode === 'teach') { LS.solved++; return advance(); }
   if (LS.mode === 'answer') return checkAnswer();
   if (LS.mode === 'feedback') {
-    if (LS.ok || LS.quiz) LS.solved++;          // no teste, pergunta errada não volta
+    if (LS.ok || isSkip()) LS.solved++;          // no teste, pergunta errada não volta
     else LS.queue.push(LS.cur);
     if (LS.hearts <= 0) return failLesson();
     return advance();
   }
   if (LS.mode === 'result') return closeLesson();
-  if (LS.mode === 'failed') return LS.quiz ? startSkipTest(LS.cid, LS.quiz.unit) : startLesson(LS.cid, LS.i);
+  if (LS.mode === 'failed') return isSkip() ? startSkipTest(LS.cid, LS.quiz.unit) : LS.quiz ? startPractice(LS.cid) : startLesson(LS.cid, LS.i);
 }
 
 function advance() {
   LS.pos++;
-  if (LS.pos >= LS.queue.length) return LS.quiz ? finishSkipTest() : finishLesson();
+  if (LS.pos >= LS.queue.length) return isSkip() ? finishSkipTest() : LS.quiz ? finishPractice() : finishLesson();
   renderStep();
 }
 
@@ -858,12 +886,13 @@ function checkAnswer() {
   } else {
     LS.hearts--;
     LS.mistakes++;
+    if (s.lid != null) noteErro(LS.cid, s.lid, s.k);
     foot.classList.add('bad');
     fb.innerHTML = `<div class="fb-title">${knightSVG('sad', 'knight-xs')} ${pick(OOPS)}</div>
       ${extra ? `<div class="fb-why">${extra}</div>` : ''}
       <div class="fb-right"><small>Resposta certa:</small>${rightIsCode ? `<pre class="code mini">${highlight(right, LS.lang)}</pre>` : `<b>${esc(right)}</b>`}</div>
       ${s.why ? `<div class="fb-why">${s.why}</div>` : ''}
-      ${LS.hearts > 0 ? `<div class="fb-small">${LS.quiz ? `No teste, cada erro custa uma vida. Restam ${LS.hearts}.` : 'Essa pergunta volta no final para você tentar de novo.'}</div>` : ''}`;
+      ${LS.hearts > 0 ? `<div class="fb-small">${isSkip() ? `No teste, cada erro custa uma vida. Restam ${LS.hearts}.` : 'Essa pergunta volta no final para você tentar de novo.'}</div>` : ''}`;
     setMain(LS.hearts > 0 ? 'Entendi' : 'Ver resultado', true, 'btn-red');
     Sound.play('bad');
     const h = $('.ls-hearts');
@@ -912,7 +941,8 @@ function finishLesson() {
     ${!Cloud.user && Cloud.configured() ? `<p class="res-login">Quer aparecer no ranking? <button class="link-btn" data-login>Entre com Google</button> e seu XP fica salvo.</p>` : ''}
   </div>`;
   $('.ls-foot').className = 'ls-foot';
-  $('.ls-fb').innerHTML = nextI >= 0 && firstTime ? '<button class="btn btn-white" id="goNext">Próxima lição</button>' : '';
+  $('.ls-fb').innerHTML = nextI >= 0 && firstTime ? '<button class="btn btn-white" id="goNext">Próxima lição</button>'
+    : trackDone(LS.cid) ? `<button class="btn btn-gold" data-cert="${LS.cid}">${icon('trophy')}Pegar meu certificado</button>` : '';
   setMain('Continuar', true);
   const goNext = $('#goNext');
   if (goNext) goNext.onclick = () => startLesson(LS.cid, nextI);
@@ -922,7 +952,7 @@ function finishLesson() {
 
 function failLesson() {
   LS.mode = 'failed';
-  $('.ls-inner').innerHTML = LS.quiz
+  $('.ls-inner').innerHTML = isSkip()
     ? `<div class="result fail">
     <div class="res-knight">${knightSVG('sad', 'knight-lg')}</div>
     <h1>Não foi dessa vez</h1>
@@ -940,6 +970,51 @@ function failLesson() {
   Sound.play('fail');
 }
 
+/* ---------- Treino de erros ---------- */
+const isSkip = () => !!(LS.quiz && LS.quiz.type === 'skip');
+const erroKey = (cid, lid, k) => `${cid}|${lid}|${k}`;
+function noteErro(cid, lid, k) {
+  const key = erroKey(cid, lid, k);
+  S.erros = S.erros.filter((e) => e !== key).concat(key).slice(-60);
+  save();
+}
+function errosDe(cid) {
+  return S.erros.filter((e) => e.startsWith(cid + '|')).map((e) => {
+    const [, lid, k] = e.split('|');
+    const lesson = FLAT[cid].find((l) => l.id === lid);
+    const step = lesson && lesson.steps[+k];
+    return step && step.t !== 'teach' ? Object.assign({ lid, k: +k, key: e }, step) : null;
+  }).filter(Boolean);
+}
+function startPractice(cid) {
+  const itens = errosDe(cid).reverse().slice(0, 10);
+  if (!itens.length) { toast('Você não tem erros para treinar nesta trilha. Mandou bem!'); return; }
+  startLesson(cid, 0, { type: 'treino', lesson: { id: '__treino', title: 'Treino de erros', steps: shuffle(itens) } });
+}
+function finishPractice() {
+  LS.mode = 'result';
+  const treinados = new Set(LS.lesson.steps.map((s) => s.key));
+  S.erros = S.erros.filter((e) => !treinados.has(e));
+  addXP(5);
+  const newAch = checkAchievements();
+  const restam = errosDe(LS.cid).length;
+  $('.ls-top').classList.add('hide');
+  $('.ls-inner').innerHTML = `<div class="result">
+    <div class="res-knight">${knightSVG('happy', 'knight-lg')}</div>
+    <h1>Treino completo!</h1>
+    <p class="res-sub">Você corrigiu <b>${plural(treinados.size, 'erro', 'erros')}</b>. ${restam ? `Ainda ${restam === 1 ? 'falta 1' : `faltam ${restam}`} para treinar.` : 'Nenhum erro pendente nesta trilha!'}</p>
+    <div class="res-cards"><div class="rc rc-xp"><small>XP ganho</small><b>${icon('bolt')}5</b></div></div>
+    ${newAch.length ? `<div class="res-ach"><h3>Nova conquista</h3>${newAch.map((a) => achHTML(a, true)).join('')}</div>` : ''}
+  </div>`;
+  $('.ls-foot').className = 'ls-foot';
+  $('.ls-fb').innerHTML = restam ? '<button class="btn btn-white" id="moreTrain">Treinar mais</button>' : '';
+  const more = $('#moreTrain');
+  if (more) more.onclick = () => startPractice(LS.cid);
+  setMain('Continuar', true);
+  Sound.play('win');
+  confetti(1500);
+}
+
 /* ---------- Teste para pular unidades ---------- */
 const SKIP_QUESTIONS = 12;
 function buildSkipTest(cid, ui) {
@@ -947,7 +1022,7 @@ function buildSkipTest(cid, ui) {
   const per = Math.max(2, Math.ceil(SKIP_QUESTIONS / prev.length));
   let pool = [];
   prev.forEach((u) => {
-    const exercises = u.lessons.flatMap((l) => l.steps.filter((s) => s.t === 'choice' || s.t === 'fill' || s.t === 'order'));
+    const exercises = u.lessons.flatMap((l) => l.steps.map((s, k) => Object.assign({ lid: l.id, k }, s)).filter((s) => s.t === 'choice' || s.t === 'fill' || s.t === 'order'));
     pool = pool.concat(shuffle(exercises).slice(0, per));
   });
   return { title: `Teste: pular para a Unidade ${ui + 1}`, steps: shuffle(pool).slice(0, SKIP_QUESTIONS) };
@@ -963,7 +1038,7 @@ function confirmSkip(cid, ui) {
   $('#skipGo').onclick = () => startSkipTest(cid, ui);
 }
 function startSkipTest(cid, ui) {
-  startLesson(cid, 0, { unit: ui, lesson: buildSkipTest(cid, ui) });
+  startLesson(cid, 0, { type: 'skip', unit: ui, lesson: buildSkipTest(cid, ui) });
 }
 function finishSkipTest() {
   LS.mode = 'result';
@@ -998,34 +1073,45 @@ function finishSkipTest() {
 }
 
 /* ---------- Ranking ---------- */
-const rankCache = { at: 0, rows: null, err: null, loading: false };
+const newRank = () => ({ at: 0, rows: null, err: null, loading: false });
+const rankAll = { geral: newRank(), semana: newRank(), semanaOff: false };
+let rankTab = Store.get('vg_rank_tab', 'semana');
+const currentTab = () => (rankAll.semanaOff ? 'geral' : rankTab);
 
 async function showRanking(force) {
   renderRanking();
-  if (!Cloud.enabled || rankCache.loading) return;
-  if (!force && rankCache.rows && Date.now() - rankCache.at < 30000) return;
-  rankCache.loading = true;
+  const tab = currentTab();
+  const c = rankAll[tab];
+  if (!Cloud.enabled || c.loading) return;
+  if (!force && c.rows && Date.now() - c.at < 30000) return;
+  c.loading = true;
   renderRanking();
   try {
-    rankCache.rows = await Cloud.top(50);
-    rankCache.err = null;
+    c.rows = tab === 'semana' ? await Cloud.topWeek(50) : await Cloud.top(50);
+    c.err = null;
   } catch (e) {
     console.warn('[VanCode] ranking:', e);
-    rankCache.err = e;
+    c.err = e;
+    // regras do ranking semanal ainda não publicadas: mostra só o geral
+    if (tab === 'semana' && e.code === 'permission-denied') { rankAll.semanaOff = true; c.loading = false; return showRanking(); }
   }
-  rankCache.at = Date.now();
-  rankCache.loading = false;
+  c.at = Date.now();
+  c.loading = false;
   if (!$('#view-ranking').hidden) renderRanking();
 }
 
 function renderRanking() {
   const v = $('#view-ranking');
   const u = Cloud.user;
+  const tab = currentTab();
+  const semanal = tab === 'semana';
+  const rankCache = rankAll[tab];
   let rows = (rankCache.rows || []).slice();
+  const myXP = semanal ? weekXP() : S.xp;
   if (u) {
     // o seu cartão sempre com o XP mais atual
     rows = rows.filter((r) => r.id !== u.uid);
-    rows.push(Object.assign({ id: u.uid }, publicProfile()));
+    if (!semanal || myXP > 0) rows.push(Object.assign({ id: u.uid }, publicProfile(), { xp: myXP }));
     rows.sort((a, b) => b.xp - a.xp);
     if (rows.length > 50 && rows.findIndex((r) => r.id === u.uid) >= 50) rows = rows.slice(0, 50);
   }
@@ -1041,7 +1127,9 @@ function renderRanking() {
   } else if (!rankCache.rows && (rankCache.loading || !Cloud.enabled)) {
     main = `<div class="rank-list skeleton">${'<div class="rank-row"></div>'.repeat(6)}</div>`;
   } else if (!rows.length) {
-    main = `<div class="card rank-note">${knightSVG('wow', 'knight-md')}<div><h3>Ninguém aqui ainda</h3><p>Entre com sua conta Google e seja o primeiro cavaleiro do ranking!</p></div></div>`;
+    main = semanal
+      ? `<div class="card rank-note">${knightSVG('wow', 'knight-md')}<div><h3>A semana está começando</h3><p>Ninguém ganhou XP ainda. Faça uma lição agora e comece a semana em primeiro!</p></div></div>`
+      : `<div class="card rank-note">${knightSVG('wow', 'knight-md')}<div><h3>Ninguém aqui ainda</h3><p>Entre com sua conta Google e seja o primeiro cavaleiro do ranking!</p></div></div>`;
   } else {
     const top3 = rows.slice(0, 3);
     const order = [1, 0, 2].filter((k) => top3[k]);
@@ -1051,14 +1139,14 @@ function renderRanking() {
         ${k === 0 && !cargoOf(r.id) ? `<span class="pod-crown">${icon('crown')}</span>` : ''}
         ${avatar(safeName(r.name), r.id, 'lg')}
         <b class="pod-name">${esc(safeName(r.name))}</b>
-        ${cargoBadge(r.id)}${leaguePill(r.xp)}
+        ${cargoBadge(r.id)}${semanal ? '' : leaguePill(r.xp)}
         <div class="pod-base"><span class="pod-n">${k + 1}</span><span class="pod-xp">${r.xp} XP</span></div>
       </div>`;
     }).join('')}</div>`;
     const list = rows.slice(3).map((r, k) => `<li class="rank-row ${u && r.id === u.uid ? 'me' : ''} ${cargoOf(r.id) ? 'staff' : ''}">
       <span class="rk">${k + 4}</span>${avatar(safeName(r.name), r.id)}
-      <span class="rn"><span class="rn-top"><b>${esc(safeName(r.name))}</b>${cargoBadge(r.id)}</span><small>${plural(r.lessons || 0, 'lição', 'lições')} · ${plural(r.arena || 0, 'missão', 'missões')}</small></span>
-      ${leaguePill(r.xp)}<span class="rx">${r.xp} XP</span>
+      <span class="rn"><span class="rn-top"><b>${esc(safeName(r.name))}</b>${cargoBadge(r.id)}</span><small>${semanal ? 'XP nesta semana' : `${plural(r.lessons || 0, 'lição', 'lições')} · ${plural(r.arena || 0, 'missão', 'missões')}`}</small></span>
+      ${semanal ? '' : leaguePill(r.xp)}<span class="rx">${r.xp} XP</span>
     </li>`).join('');
     main = podium + (list ? `<ol class="rank-list">${list}</ol>` : '');
   }
@@ -1086,7 +1174,8 @@ function renderRanking() {
       <div>
         <span class="eyebrow">Ranking</span>
         <h1>Os cavaleiros da VanCode</h1>
-        <p>Ganhe XP nas lições e na Arena para subir de posto: de Escudeiro até Lenda.</p>
+        <p>${semanal ? `Quem ganhar mais XP nesta semana fica no topo. Zera toda segunda-feira (${daysToMonday() === 1 ? 'falta 1 dia' : `faltam ${daysToMonday()} dias`}).` : 'Ganhe XP nas lições e na Arena para subir de posto: de Escudeiro até Lenda.'}</p>
+        ${Cloud.enabled && !rankAll.semanaOff ? `<div class="rank-tabs" role="tablist"><button role="tab" data-rtab="semana" class="${semanal ? 'on' : ''}">Esta semana</button><button role="tab" data-rtab="geral" class="${semanal ? '' : 'on'}">Geral</button></div>` : ''}
       </div>
       ${Cloud.enabled ? `<button class="btn btn-white btn-sm" data-rank-reload>${icon('reset')}Atualizar</button>` : ''}
     </div>
@@ -1102,6 +1191,180 @@ function renderRanking() {
     </div>
   </div>`;
 }
+
+/* ---------- Certificado de conclusão ---------- */
+const TRACK_NAME = { python: 'Python para LEGO® SPIKE™ Prime', java: 'Java para FIRST® Tech Challenge' };
+const trackDone = (cid) => countDone(cid) >= totalLessons(cid);
+const loadImg = (src) => new Promise((ok, bad) => { const im = new Image(); im.onload = () => ok(im); im.onerror = bad; im.src = src; });
+function knightStandalone(mood) {
+  const defs = KNIGHT_DEFS.match(/<defs>[\s\S]*<\/defs>/)[0];
+  return knightSVG(mood).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="324" ').replace(/(<svg[^>]*>)/, `$1${defs}`);
+}
+async function drawCertificate(cid, nome) {
+  await Promise.all(['800 90px "Baloo 2"', '900 30px Nunito', '700 30px Nunito'].map((f) => document.fonts.load(f).catch(() => null)));
+  const W = 1600, H = 1131;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#FFFDF6'; g.fillRect(0, 0, W, H);
+  g.strokeStyle = '#4A1A9E'; g.lineWidth = 28; g.strokeRect(14, 14, W - 28, H - 28);
+  g.strokeStyle = '#FFC21A'; g.lineWidth = 4; g.strokeRect(48, 48, W - 96, H - 96);
+  const [logo, knight, lang] = await Promise.all([
+    loadImg('img/vanguard-logo-sm.png'),
+    loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(knightStandalone('happy'))),
+    loadImg(`img/${cid}.svg`)
+  ]);
+  g.drawImage(logo, W / 2 - 150, 78, 300, (300 * logo.height) / logo.width);
+  g.textAlign = 'center';
+  if ('letterSpacing' in g) g.letterSpacing = '8px';
+  g.fillStyle = '#6A2BD9'; g.font = '900 30px Nunito';
+  g.fillText('CERTIFICADO DE CONCLUSÃO', W / 2, 420);
+  if ('letterSpacing' in g) g.letterSpacing = '0px';
+  g.fillStyle = '#6C6488'; g.font = '700 30px Nunito';
+  g.fillText('A equipe FTC Vanguard #37520 certifica que', W / 2, 480);
+  let size = 96;
+  g.font = `800 ${size}px "Baloo 2"`;
+  while (g.measureText(nome).width > 1150 && size > 40) { size -= 4; g.font = `800 ${size}px "Baloo 2"`; }
+  g.fillStyle = '#24183F';
+  g.fillText(nome, W / 2, 592);
+  g.strokeStyle = '#FFC21A'; g.lineWidth = 5;
+  g.beginPath(); g.moveTo(W / 2 - 420, 622); g.lineTo(W / 2 + 420, 622); g.stroke();
+  g.fillStyle = '#3F375C'; g.font = '700 32px Nunito';
+  g.fillText(`concluiu a trilha ${TRACK_NAME[cid]} na VanCode,`, W / 2, 690);
+  g.fillText(`com ${totalLessons(cid)} lições, do básico à robótica avançada.`, W / 2, 738);
+  // data
+  g.fillStyle = '#24183F'; g.font = '800 30px Nunito';
+  g.fillText(new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }), 380, 930);
+  g.strokeStyle = '#CFC8E3'; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(220, 950); g.lineTo(540, 950); g.stroke();
+  g.fillStyle = '#6C6488'; g.font = '700 22px Nunito';
+  g.fillText('Data de conclusão', 380, 984);
+  // selo dourado com o logo da linguagem
+  const grad = g.createLinearGradient(0, 800, 0, 1000);
+  grad.addColorStop(0, '#FFE27A'); grad.addColorStop(1, '#E5A300');
+  g.fillStyle = grad; g.beginPath(); g.arc(W / 2, 900, 96, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(W / 2, 900, 72, 0, Math.PI * 2); g.fill();
+  g.drawImage(lang, W / 2 - 46, 854, 92, 92);
+  // Guardinho
+  g.drawImage(knight, 1160, 760, 150, 162);
+  g.fillStyle = '#24183F'; g.font = '800 28px "Baloo 2"';
+  g.fillText('Guardinho', 1235, 958);
+  g.fillStyle = '#6C6488'; g.font = '700 22px Nunito';
+  g.fillText('mascote da VanCode', 1235, 988);
+  g.fillStyle = '#A39CBC'; g.font = '700 20px Nunito';
+  g.fillText(location.host || 'vancode-khaki.vercel.app', W / 2, H - 74);
+  return cv;
+}
+function showCertificate(cid) {
+  if (!trackDone(cid)) { toast('Complete todas as lições da trilha para ganhar o certificado!'); return; }
+  const sugestao = S.name || (Cloud.user && Cloud.user.displayName) || '';
+  openModal(`<div class="center-modal cert-modal">
+    ${langBadge(cid, 'lg')}
+    <h3>Certificado: ${COURSES[cid].name}</h3>
+    <p>Como seu nome deve aparecer no certificado? (Ele não fica salvo em lugar nenhum.)</p>
+    <input class="text-in" id="certName" maxlength="40" value="${esc(sugestao)}" aria-label="Nome no certificado">
+    <div class="modal-btns"><button class="btn btn-gold" id="certGo">${icon('trophy')}Gerar certificado</button></div>
+    <div id="certOut"></div>
+  </div>`, 'modal-wide');
+  $('#certGo').onclick = async () => {
+    const nome = String($('#certName').value).replace(/\s+/g, ' ').trim().slice(0, 40) || 'Cavaleiro da VanCode';
+    if (nickProibido(nome)) { toast('Esse nome não pode. Escolha outro, sem palavrões nem ofensas.', 'err'); return; }
+    const btn = $('#certGo');
+    btn.disabled = true;
+    try {
+      const cv = await drawCertificate(cid, nome);
+      const blob = await new Promise((r) => cv.toBlob(r, 'image/png'));
+      const url = URL.createObjectURL(blob);
+      const arquivo = `certificado-vancode-${cid}.png`;
+      const file = new File([blob], arquivo, { type: 'image/png' });
+      const podeCompartilhar = navigator.canShare && navigator.canShare({ files: [file] });
+      $('#certOut').innerHTML = `<img class="cert-preview" src="${url}" alt="Seu certificado da VanCode">
+        <div class="modal-btns"><a class="btn btn-green" href="${url}" download="${arquivo}">Baixar imagem</a>${podeCompartilhar ? '<button class="btn btn-white" id="certShare">Compartilhar</button>' : ''}</div>`;
+      const sh = $('#certShare');
+      if (sh) sh.onclick = () => navigator.share({ files: [file], title: 'Meu certificado da VanCode' }).catch(() => {});
+      confetti(1500);
+    } catch (e) {
+      console.warn('[VanCode] certificado:', e);
+      toast('Não consegui gerar o certificado agora.', 'err');
+    }
+    btn.disabled = false;
+  };
+}
+
+/* ---------- Painel de impacto (números para o portfólio da equipe) ---------- */
+const impact = { data: null, loading: false, err: null };
+const fmt = (n) => Number(n || 0).toLocaleString('pt-BR');
+async function loadImpact(force) {
+  if (!Cloud.enabled || impact.loading || (!force && impact.data)) return;
+  impact.loading = true;
+  try { impact.data = await Cloud.stats(); impact.err = null; }
+  catch (e) { console.warn('[VanCode] impacto:', e); impact.err = e; }
+  impact.loading = false;
+  renderImpactBand();
+  if (!$('#view-impact').hidden) renderImpact();
+}
+function renderImpactBand() {
+  const el = $('#impactBand');
+  const d = impact.data;
+  if (!el) return;
+  if (!d || !d.contas) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="impact card">
+    <div class="imp-head"><span class="eyebrow">Impacto</span><h3>A VanCode até agora</h3></div>
+    <div class="imp-nums">
+      <div><b>${fmt(d.contas)}</b><small>cavaleiros com conta</small></div>
+      <div><b>${fmt(d.licoes)}</b><small>lições concluídas</small></div>
+      <div><b>${fmt(d.missoes)}</b><small>missões na Arena</small></div>
+      <div><b>${fmt(d.xp)}</b><small>XP conquistado</small></div>
+    </div>
+    <a class="imp-link" href="#/impacto">Ver o painel completo ${icon('arrow')}</a>
+  </div>`;
+}
+function impactText(d) {
+  const dia = d.em.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+  return `Até ${dia}, a VanCode, plataforma gratuita criada pela equipe FTC Vanguard #37520 para ensinar Python (LEGO SPIKE) e Java (FTC), já tinha ${fmt(d.contas)} estudantes cadastrados, que concluíram ${fmt(d.licoes)} lições e ${fmt(d.missoes)} missões de programação, somando ${fmt(d.xp)} XP.`;
+}
+function renderImpact() {
+  const v = $('#view-impact');
+  const d = impact.data;
+  let corpo;
+  if (!Cloud.configured() || Cloud.failed) corpo = '<div class="card rank-note"><div><h3>Sem conexão com o Firebase</h3><p>Os números aparecem aqui quando o login com Google estiver funcionando.</p></div></div>';
+  else if (impact.err) corpo = '<div class="card rank-note"><div><h3>Não consegui carregar os números</h3><p>Tente de novo daqui a pouco.</p></div></div>';
+  else if (!d) corpo = '<div class="rank-list skeleton"><div class="rank-row"></div><div class="rank-row"></div><div class="rank-row"></div></div>';
+  else {
+    const maxLiga = Math.max(1, ...d.ligas);
+    corpo = `<div class="imp-big">
+        <div class="card"><b>${fmt(d.contas)}</b><small>cavaleiros com conta</small></div>
+        <div class="card"><b>${fmt(d.licoes)}</b><small>lições concluídas</small></div>
+        <div class="card"><b>${fmt(d.missoes)}</b><small>missões na Arena</small></div>
+        <div class="card"><b>${fmt(d.xp)}</b><small>XP conquistado</small></div>
+      </div>
+      <div class="card imp-ligas"><h3>Cavaleiros por liga</h3>
+        ${LEAGUES.map((l, k) => `<div class="imp-liga"><span class="lg-dot" style="--lc:${l.color}">${icon('shield')}</span><b>${l.name}</b>
+          <div class="bar"><div style="width:${(d.ligas[k] / maxLiga) * 100}%;--tc:${l.color}"></div></div><span class="imp-n">${fmt(d.ligas[k])}</span></div>`).join('')}
+      </div>
+      <div class="card imp-text"><h3>Para o portfólio de engenharia</h3>
+        <p id="impText">${esc(impactText(d))}</p>
+        <button class="btn btn-brand btn-sm" id="impCopy">Copiar texto</button>
+        <p class="muted">Conta só quem entrou com Google: quem usa sem conta não aparece aqui. Números de ${d.em.toLocaleString('pt-BR')}.</p>
+      </div>`;
+  }
+  v.innerHTML = `<div class="rank-page wrap">
+    <div class="rank-head"><div><span class="eyebrow">Impacto</span><h1>A VanCode em números</h1>
+      <p>Dados reais do Firebase. Ótimos para o portfólio e para os prêmios de divulgação do FTC (Reach, Connect e Inspire).</p></div>
+      ${Cloud.enabled ? `<button class="btn btn-white btn-sm" id="impReload">${icon('reset')}Atualizar</button>` : ''}
+    </div>
+    ${corpo}
+  </div>`;
+  const cp = $('#impCopy');
+  if (cp) cp.onclick = () => { navigator.clipboard.writeText(impactText(d)).then(() => toast('Texto copiado!'), () => toast('Não consegui copiar.', 'err')); };
+  const rl = $('#impReload');
+  if (rl) rl.onclick = () => { impact.data = null; renderImpact(); loadImpact(true); };
+}
+
+/* ---------- Instalar como app ---------- */
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; });
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone;
 
 /* ---------- Perfil ---------- */
 function showProfile() {
@@ -1140,8 +1403,10 @@ function showProfile() {
     </div>
     <h3>Conquistas <small>${got}/${ACHIEVEMENTS.length}</small></h3>
     <div class="ach-grid">${ACHIEVEMENTS.map((a) => achHTML(a, !!S.achievements[a.id])).join('')}</div>
+    ${['python', 'java'].some(trackDone) ? `<h3>Certificados</h3><div class="pf-certs">${['python', 'java'].filter(trackDone).map((c) => `<button class="btn btn-gold btn-sm" data-cert="${c}">${icon('trophy')}Certificado de ${COURSES[c].name}</button>`).join('')}</div>` : ''}
     <h3>Configurações</h3>
     <div class="pf-settings">
+      ${installPrompt ? `<button class="btn btn-brand btn-sm" id="pfInstall">${icon('play')}Instalar a VanCode como app</button>` : (isIOS() ? '<p class="muted">No iPhone: toque em Compartilhar e depois em <b>Adicionar à Tela de Início</b> para ter a VanCode como app.</p>' : '')}
       <label class="switch"><input type="checkbox" id="pfSound" ${Sound.muted ? '' : 'checked'}><span></span>Sons</label>
       <label class="switch"><input type="checkbox" id="pfMentor" ${S.mentor ? 'checked' : ''}><span></span>Modo mentor <small>libera todas as lições, para professores e apresentações</small></label>
       <button class="btn btn-white btn-sm" id="pfReset">Apagar meu progresso</button>
@@ -1162,6 +1427,8 @@ function showProfile() {
   $('#pfMentor').addEventListener('change', (e) => { S.mentor = e.target.checked; save(); route(); });
   const lo = $('#pfLogout');
   if (lo) lo.addEventListener('click', () => { closeModal(); Cloud.signOut(); });
+  const inst = $('#pfInstall');
+  if (inst) inst.onclick = async () => { installPrompt.prompt(); await installPrompt.userChoice.catch(() => null); installPrompt = null; closeModal(); };
   const del = $('#pfDelete');
   if (del) del.addEventListener('click', askDeleteAccount);
   $('#pfReset').addEventListener('click', () => {
@@ -1191,8 +1458,14 @@ function initEvents() {
     if (t.closest('[data-login]')) { Cloud.signIn(); return; }
     if (t.closest('[data-profile]') || t.closest('#statStreak') || t.closest('#statXp')) { showProfile(); return; }
     if (t.closest('[data-rank-reload]')) { showRanking(true); return; }
+    const rt = t.closest('[data-rtab]');
+    if (rt) { rankTab = rt.dataset.rtab; Store.set('vg_rank_tab', rankTab); showRanking(); return; }
+    const cert = t.closest('[data-cert]');
+    if (cert) { showCertificate(cert.dataset.cert); return; }
     const node = t.closest('.node');
     if (node) { showPop(node); return; }
+    const practice = t.closest('[data-practice]');
+    if (practice) { startPractice(practice.dataset.practice); return; }
     const skip = t.closest('[data-skip]');
     if (skip) { const [cid, ui] = skip.dataset.skip.split(':'); confirmSkip(cid, +ui); return; }
     const guide = t.closest('[data-guide]');
@@ -1237,6 +1510,7 @@ function init() {
   route();
   HeroDemo.init();
   Cloud.init();
+  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => null);
 }
 
 init();
