@@ -26,7 +26,8 @@ function migrateDone(done) {
 const DEFAULT_STATE = {
   xp: 0, streak: 0, lastDay: null, daily: { day: null, xp: 0 },
   done: {}, perfect: 0, lessons: 0, arena: {}, achievements: {},
-  name: '', mentor: false, goal: 30, uid: null, erros: [], semana: { id: null, xp: 0 }
+  name: '', mentor: false, goal: 30, uid: null, erros: [], semana: { id: null, xp: 0 },
+  desafio: null, desafios: 0, labRuns: 0
 };
 const freshState = () => JSON.parse(JSON.stringify(DEFAULT_STATE));
 function normalizeState(x) {
@@ -155,6 +156,8 @@ const ACHIEVEMENTS = [
   { id: 'arenaall', icon: 'crown', name: 'Rei da Arena', desc: 'Passe todas as missões da Arena', test: () => arenaCount() >= ARENA_LEVELS.length },
   { id: 'robo', icon: 'bolt', name: 'Mão na massa', desc: 'Complete a unidade de robô (SPIKE ou FTC)', test: () => unitDone('python', 2) || unitDone('java', 2) },
   { id: 'controle', icon: 'target', name: 'Engenheiro(a) de controle', desc: 'Complete uma lição de controle P', test: () => isDoneId('python', 'spike-reto') || isDoneId('java', 'ftc-controle-p') },
+  { id: 'desafio3', icon: 'calendar', name: 'Desafiante', desc: 'Vença 3 desafios do dia', test: () => (S.desafios | 0) >= 3 },
+  { id: 'lab', icon: 'flask', name: 'Cientista do código', desc: 'Rode um programa no Laboratório de Python', test: () => (S.labRuns | 0) >= 1 },
   { id: 'avancado', icon: 'trophy', name: 'Nível competição', desc: 'Complete a unidade Robótica avançada de uma trilha', test: () => unitDone('python', COURSES.python.units.length - 1) || unitDone('java', COURSES.java.units.length - 1) }
 ];
 const achHTML = (a, got) => `<div class="ach ${got ? 'got' : ''}" title="${esc(a.desc)}"><span class="ach-ic">${icon(a.icon)}</span><div><b>${a.name}</b><small>${a.desc}</small></div></div>`;
@@ -192,6 +195,9 @@ function mergeStates(a, b) {
   m.name = a.name || b.name;
   m.mentor = a.mentor || b.mentor;
   m.erros = [...new Set(a.erros.concat(b.erros))].slice(-60);
+  m.desafio = (a.desafio || '') >= (b.desafio || '') ? a.desafio : b.desafio;
+  m.desafios = Math.max(a.desafios | 0, b.desafios | 0);
+  m.labRuns = Math.max(a.labRuns | 0, b.labRuns | 0);
   m.semana = a.semana.id === b.semana.id ? { id: a.semana.id, xp: Math.max(a.semana.xp, b.semana.xp) } : ((a.semana.id || '') > (b.semana.id || '') ? a.semana : b.semana);
   return m;
 }
@@ -325,6 +331,12 @@ function route() {
     nav('arena');
     document.title = 'Arena · VanCode';
     window.scrollTo(0, 0);
+  } else if (page === 'laboratorio') {
+    $('#view-lab').hidden = false;
+    Lab.show();
+    nav('lab');
+    document.title = 'Laboratório de Python · VanCode';
+    window.scrollTo(0, 0);
   } else if (page === 'impacto') {
     $('#view-impact').hidden = false;
     renderImpact();
@@ -361,15 +373,17 @@ function showHome() {
   });
   const cc = $('#continueCard');
   const started = ['python', 'java'].filter((c) => countDone(c) > 0 && nextLesson(c) >= 0);
+  let cont = '';
   if (started.length) {
     const cid = started[0];
     const i = nextLesson(cid);
-    cc.innerHTML = `<div class="continue card">
+    cont = `<div class="continue card">
       ${langBadge(cid, 'lg')}
       <div class="cont-text"><small>${S.name ? `Oi, ${esc(S.name)}! ` : ''}Continue de onde parou</small><b>${COURSES[cid].name} · Lição ${i + 1}: ${FLAT[cid][i].title}</b></div>
       <button class="btn btn-green" data-start="${cid}:${i}">Continuar</button>
     </div>`;
-  } else cc.innerHTML = '';
+  }
+  cc.innerHTML = `<div class="home-cards ${cont ? '' : 'solo'}">${cont}${desafioCardHTML('home-desafio')}</div>`;
 }
 
 /* Demo do hero: o código é digitado e o cavaleiro anda de verdade */
@@ -583,6 +597,7 @@ function showPath(cid) {
         <span class="side-ic fire">${icon('flame')}</span>
         <div><h4>${st} dia${st === 1 ? '' : 's'} de ofensiva</h4><small>${st ? 'Volte amanhã para não perder!' : 'Faça uma lição hoje para começar.'}</small></div>
       </div>
+      ${desafioCardHTML()}
       ${errosDe(cid).length ? `<button class="card side-card link-card train-card" data-practice="${cid}">
         <span class="side-ic train">${icon('reset')}</span>
         <div><h4>Treinar erros</h4><small>${plural(errosDe(cid).length, 'pergunta', 'perguntas')} para revisar</small></div>
@@ -652,7 +667,7 @@ function startLesson(cid, i, quiz = null) {
   closePop();
   closeModal();
   const lesson = quiz ? quiz.lesson : FLAT[cid][i];
-  const hearts = quiz && quiz.type === 'skip' ? 3 : 5;
+  const hearts = quiz && quiz.type === 'skip' ? 3 : quiz && quiz.type === 'desafio' ? 1 : 5;
   Object.assign(LS, {
     cid, i, lesson, quiz, lang: COURSES[cid].lang,
     queue: lesson.steps.map((s, k) => Object.assign({ k, lid: lesson.id }, s)),
@@ -830,6 +845,7 @@ function mainAction() {
   if (LS.mode === 'teach') { LS.solved++; return advance(); }
   if (LS.mode === 'answer') return checkAnswer();
   if (LS.mode === 'feedback') {
+    if (isDesafio()) return finishDesafio();
     if (LS.ok || isSkip()) LS.solved++;          // no teste, pergunta errada não volta
     else LS.queue.push(LS.cur);
     if (LS.hearts <= 0) return failLesson();
@@ -880,6 +896,7 @@ function checkAnswer() {
 
   LS.ok = ok;
   LS.mode = 'feedback';
+  if (isDesafio()) registrarDesafio(ok);
   const foot = $('.ls-foot');
   const fb = $('.ls-fb');
   if (ok) {
@@ -897,7 +914,7 @@ function checkAnswer() {
       <div class="fb-right"><small>Resposta certa:</small>${rightIsCode ? `<pre class="code mini">${highlight(right, LS.lang)}</pre>` : `<b>${esc(right)}</b>`}</div>
       ${s.why ? `<div class="fb-why">${s.why}</div>` : ''}
       ${LS.hearts > 0 ? `<div class="fb-small">${isSkip() ? `No teste, cada erro custa uma vida. Restam ${LS.hearts}.` : 'Essa pergunta volta no final para você tentar de novo.'}</div>` : ''}`;
-    setMain(LS.hearts > 0 ? 'Entendi' : 'Ver resultado', true, 'btn-red');
+    setMain(LS.hearts > 0 ? 'Entendi' : isDesafio() ? 'Continuar' : 'Ver resultado', true, 'btn-red');
     Sound.play('bad');
     const h = $('.ls-hearts');
     h.classList.remove('hit'); void h.offsetWidth; h.classList.add('hit');
@@ -1017,6 +1034,68 @@ function finishPractice() {
   setMain('Continuar', true);
   Sound.play('win');
   confetti(1500);
+}
+
+/* ---------- Desafio do dia ---------- */
+/* Uma pergunta por dia, sorteada pela data entre as lições que a pessoa já fez.
+   Uma chance só: acertou, ganha XP bônus; errou, a pergunta vai para o treino de erros. */
+const DESAFIO_XP = 10;
+const isDesafio = () => !!(LS.quiz && LS.quiz.type === 'desafio');
+const desafioFeito = () => S.desafio === dayStr();
+function hashStr(t) {
+  let h = 2166136261;
+  for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function desafioHoje() {
+  const pool = [];
+  const junta = (cid, l) => l.steps.forEach((s, k) => { if (s.t !== 'teach') pool.push({ cid, l, k }); });
+  ['python', 'java'].forEach((cid) => FLAT[cid].forEach((l, i) => { if (isDone(cid, i)) junta(cid, l); }));
+  if (!pool.length) junta('python', FLAT.python[0]);        // quem está começando: perguntas da lição 1
+  const it = pool[hashStr(`vancode:${dayStr()}:${pool.length}`) % pool.length];
+  return Object.assign({}, it.l.steps[it.k], { cid: it.cid, lid: it.l.id, k: it.k, from: it.l.title });
+}
+function startDesafio() {
+  if (desafioFeito()) { toast('Você já fez o desafio de hoje. Volte amanhã para o próximo!'); return; }
+  const q = desafioHoje();
+  startLesson(q.cid, 0, { type: 'desafio', lesson: { id: '__desafio', title: 'Desafio do dia', steps: [q] } });
+}
+function registrarDesafio(ok) {
+  S.desafio = dayStr();
+  if (ok) { S.desafios = (S.desafios | 0) + 1; addXP(DESAFIO_XP); }
+  save();
+}
+function horasAteAmanha() {
+  const d = new Date(), m = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+  const h = Math.ceil((m - d) / 3600000);
+  return h <= 1 ? 'menos de 1 hora' : `${h} horas`;
+}
+function finishDesafio() {
+  LS.mode = 'result';
+  const ok = LS.ok;
+  const newAch = checkAchievements();
+  $('.ls-top').classList.add('hide');
+  $('.ls-inner').innerHTML = `<div class="result${ok ? '' : ' fail'}">
+    <div class="res-knight">${knightSVG(ok ? 'happy' : 'sad', 'knight-lg')}</div>
+    <h1>${ok ? 'Desafio vencido!' : 'Não foi dessa vez'}</h1>
+    <p class="res-sub">${ok ? `Você já venceu <b>${plural(S.desafios, 'desafio', 'desafios')}</b> do dia.` : 'A pergunta foi para o seu <b>treino de erros</b>, assim você pode praticar até acertar.'}</p>
+    ${ok ? `<div class="res-cards"><div class="rc rc-xp"><small>XP bônus</small><b>${icon('bolt')}${DESAFIO_XP}</b></div></div>` : ''}
+    ${newAch.length ? `<div class="res-ach"><h3>Nova conquista</h3>${newAch.map((a) => achHTML(a, true)).join('')}</div>` : ''}
+    <p class="res-next">O próximo desafio chega em <b>${horasAteAmanha()}</b>.</p>
+  </div>`;
+  $('.ls-foot').className = 'ls-foot';
+  $('.ls-fb').innerHTML = '';
+  setMain('Continuar', true);
+  Sound.play(ok ? 'win' : 'fail');
+  if (ok) confetti(1500);
+}
+function desafioCardHTML(cls = '') {
+  const feito = desafioFeito();
+  return `<button class="card side-card link-card desafio-card ${feito ? 'feito' : ''} ${cls}" ${feito ? 'disabled' : 'data-desafio'}>
+    <span class="side-ic desafio">${icon(feito ? 'check' : 'calendar')}</span>
+    <div><h4>Desafio do dia</h4><small>${feito ? `Feito! O próximo chega em ${horasAteAmanha()}.` : `Uma pergunta, uma chance: +${DESAFIO_XP} XP`}</small></div>
+    ${feito ? '' : icon('arrow', 'arrow')}
+  </button>`;
 }
 
 /* ---------- Teste para pular unidades ---------- */
@@ -1470,6 +1549,7 @@ function initEvents() {
     if (node) { showPop(node); return; }
     const practice = t.closest('[data-practice]');
     if (practice) { startPractice(practice.dataset.practice); return; }
+    if (t.closest('[data-desafio]')) { startDesafio(); return; }
     const skip = t.closest('[data-skip]');
     if (skip) { const [cid, ui] = skip.dataset.skip.split(':'); confirmSkip(cid, +ui); return; }
     const guide = t.closest('[data-guide]');

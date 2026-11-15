@@ -28,6 +28,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=JetBrains+Mono:wght@500;700&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <!-- Contador de visitas anônimo (Vercel Web Analytics, sem cookies). Só carrega no site publicado. -->
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    if (location.protocol === 'https:') { var va = document.createElement('script'); va.defer = true; va.src = '/_vercel/insights/script.js'; document.head.appendChild(va); }
+  </script>
 </head>
 <body>
 
@@ -41,6 +46,7 @@
       <a href="#/trilha/python" data-nav="python"><span class="lang-badge python mini"><img src="img/python.svg" alt="" width="64" height="64"></span><span class="nt">Python</span></a>
       <a href="#/trilha/java" data-nav="java"><span class="lang-badge java mini"><img src="img/java.svg" alt="" width="64" height="64"></span><span class="nt">Java</span></a>
       <a href="#/arena" data-nav="arena"><span class="ni" data-icon="gamepad"></span><span class="nt">Arena</span></a>
+      <a href="#/laboratorio" data-nav="lab"><span class="ni" data-icon="flask"></span><span class="nt">Lab</span></a>
       <a href="#/ranking" data-nav="ranking"><span class="ni" data-icon="podium"></span><span class="nt">Ranking</span></a>
       <a href="#/porque" data-nav="porque" class="hide-md"><span class="nt">Por que código?</span></a>
     </nav>
@@ -204,6 +210,15 @@ garra.setPosition(1.0);</pre>
               <a href="#/arena" class="btn btn-green">Jogar agora</a>
             </div>
           </div>
+          <div class="lab-promo card">
+            <pre class="code lab-promo-code" aria-hidden="true"><span class="tk-k">for</span> i <span class="tk-k">in</span> <span class="tk-f">range</span>(<span class="tk-n">3</span>):
+    <span class="tk-f">print</span>(<span class="tk-s">"Vanguard!"</span>)</pre>
+            <div class="ap-text">
+              <h3>Laboratório de Python</h3>
+              <p>Quer criar seus próprios programas? No laboratório roda <b>Python de verdade</b>, sem instalar nada: tabuada, jogos de adivinhar, contas do robô e o que você inventar.</p>
+              <a href="#/laboratorio" class="btn btn-white">Abrir o laboratório</a>
+            </div>
+          </div>
         </section>
 
         <!-- Sobre -->
@@ -231,6 +246,9 @@ garra.setPosition(1.0);</pre>
     <!-- ===================== ARENA ===================== -->
     <section id="view-arena" class="view" hidden></section>
 
+    <!-- ===================== LABORATÓRIO ===================== -->
+    <section id="view-lab" class="view" hidden></section>
+
     <!-- ===================== RANKING ===================== -->
     <section id="view-ranking" class="view" hidden></section>
 
@@ -257,11 +275,15 @@ garra.setPosition(1.0);</pre>
         <h2>O que aparece para os outros</h2>
         <p>No ranking aparecem apenas o seu <b>apelido</b> e números (XP, lições, missões e ofensiva). O ranking semanal guarda o apelido e o XP de cada semana. Seu e-mail, seu nome completo e sua foto <b>nunca</b> aparecem para outras pessoas. Use um apelido, não precisa ser seu nome!</p>
         <p>O <b>certificado</b> é gerado no seu próprio aparelho: o nome que você escreve nele não é enviado para lugar nenhum.</p>
+        <p>No <b>Laboratório de Python</b>, o seu código roda dentro do seu navegador e não é enviado para ninguém. Na primeira vez, o site baixa o Python (Pyodide) do jsDelivr, um serviço que entrega arquivos de código aberto.</p>
+
+        <h2>Contador de visitas</h2>
+        <p>Para saber quantas pessoas a VanCode está ajudando, usamos o <b>Vercel Web Analytics</b>. Ele conta visitas de forma anônima: <b>não usa cookies</b>, não guarda seu nome nem seu e-mail e não segue você por outros sites. A equipe só vê números gerais, como quantas visitas o site teve, quais páginas foram abertas e de que país e tipo de aparelho.</p>
 
         <h2>O que a gente não faz</h2>
         <ul>
           <li>Não vendemos nem compartilhamos seus dados.</li>
-          <li>Não tem anúncio e não usamos ferramentas de rastreamento.</li>
+          <li>Não tem anúncio e não usamos cookies de rastreamento nem ferramentas que seguem você pela internet.</li>
           <li>O site só carrega as fontes de texto do Google Fonts, que recebe o endereço de acesso como qualquer site que usa essas fontes.</li>
         </ul>
 
@@ -283,6 +305,7 @@ garra.setPosition(1.0);</pre>
         <a href="#/trilha/python">Trilha Python</a>
         <a href="#/trilha/java">Trilha Java</a>
         <a href="#/arena">Arena</a>
+        <a href="#/laboratorio">Laboratório</a>
         <a href="#/ranking">Ranking</a>
         <a href="#/porque">Por que código?</a>
         <a href="#/impacto">Impacto</a>
@@ -303,6 +326,7 @@ garra.setPosition(1.0);</pre>
   <script src="js/courses-python-plus.js"></script>
   <script src="js/courses-java-plus.js"></script>
   <script src="js/arena.js"></script>
+  <script src="js/lab.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/cargos.js"></script>
   <script src="js/cloud.js"></script>

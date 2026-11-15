@@ -3,10 +3,10 @@
    Sempre tenta a rede primeiro: com internet, ninguém fica
    com versão velha. Sem internet, usa o que já está guardado.
    ========================================================= */
-const CACHE = 'vancode-v1';
+const CACHE = 'vancode-v2';
 const BASICO = [
   './', 'index.html', 'manifest.webmanifest', 'favicon.ico', 'css/style.css',
-  'js/utils.js', 'js/courses.js', 'js/courses-python-plus.js', 'js/courses-java-plus.js', 'js/arena.js',
+  'js/utils.js', 'js/courses.js', 'js/courses-python-plus.js', 'js/courses-java-plus.js', 'js/arena.js', 'js/lab.js',
   'js/firebase-config.js', 'js/cargos.js', 'js/cloud.js', 'js/app.js',
   'img/favicon.png', 'img/favicon-32.png', 'img/icon-192.png', 'img/vanguard-logo-sm.png', 'img/vanguard-logo.png',
   'img/python.svg', 'img/java.svg'
@@ -28,7 +28,8 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;   // Firebase e fontes vão direto para a rede
+  if (url.origin !== self.location.origin) return;   // Firebase, fontes e Python vão direto para a rede
+  if (url.pathname.startsWith('/_vercel/')) return;   // contador de visitas não passa pelo cache
   e.respondWith(
     fetch(req)
       .then((res) => {
